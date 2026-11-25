@@ -1,5 +1,6 @@
 import { ArrowUpRight, Bookmark, Check, Crosshair } from 'lucide-react';
 import { Course, CourseProgressEntry, CourseStatus } from '../types/academy';
+import { buildHashHref } from '../utils/hashRouter';
 import { CourseIcon } from './CourseIcon';
 
 interface CourseCardProps {
@@ -21,19 +22,19 @@ const STATUS_META: Record<
   not_started: {
     label: 'Not started',
     next: 'in_progress',
-    nextActionLabel: 'Start',
+    nextActionLabel: 'Start Course',
     dotClass: 'text-slate-500',
   },
   in_progress: {
     label: 'In progress',
     next: 'completed',
-    nextActionLabel: 'Mark complete',
+    nextActionLabel: 'Mark Complete',
     dotClass: 'text-blue-700',
   },
   completed: {
     label: 'Completed',
     next: 'not_started',
-    nextActionLabel: 'Reset',
+    nextActionLabel: 'Reset Course',
     dotClass: 'text-emerald-700',
   },
 };
@@ -61,6 +62,7 @@ export function CourseCard({
   const personalLinkCount = progress.personalLinks?.length ?? 0;
 
   const paddingClass = density === 'compact' ? 'p-4' : 'p-5 sm:p-6';
+  const studyGuideHref = buildHashHref({ section: 'courses', courseId: course.id });
 
   return (
     <article
@@ -87,7 +89,7 @@ export function CourseCard({
             </div>
 
             <div className="flex items-center gap-1.5 text-xs text-slate-500 tabular-nums">
-              <span className="font-mono text-slate-400">{course.indexLabel}</span>
+              <span className="font-mono text-slate-400">Step {course.indexLabel}</span>
               <span aria-hidden="true">·</span>
               <span>{course.estimatedHours}h</span>
             </div>
@@ -159,8 +161,8 @@ export function CourseCard({
         )}
 
         <p className="mt-2 text-xs text-slate-400 tabular-nums">
-          {curatedResourceCount} free guides
-          {personalLinkCount > 0 ? ` · ${personalLinkCount} saved` : ''}
+          {curatedResourceCount} free resources
+          {personalLinkCount > 0 ? ` · ${personalLinkCount} custom saved` : ''}
         </p>
       </div>
 
@@ -212,14 +214,20 @@ export function CourseCard({
             {statusInfo.nextActionLabel}
           </button>
 
-          <button
-            type="button"
-            onClick={() => onOpenOverview(course.id)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-900 hover:text-blue-700 rounded-lg hover:bg-blue-50/70 transition-colors whitespace-nowrap shrink-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-blue-600"
+          <a
+            href={studyGuideHref}
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                return;
+              }
+              e.preventDefault();
+              onOpenOverview(course.id);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-900 hover:text-blue-700 rounded-lg hover:bg-blue-50/70 transition-colors whitespace-nowrap shrink-0 focus-visible:outline-2 focus-visible:outline-blue-600"
           >
-            <span>Study Guide</span>
+            <span>Open Study Guide</span>
             <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
-          </button>
+          </a>
         </div>
       </div>
     </article>

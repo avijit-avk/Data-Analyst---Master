@@ -4,9 +4,11 @@ import fs from 'fs';
 import path from 'path';
 import {defineConfig} from 'vite';
 
-export default defineConfig(() => {
+const GITHUB_PAGES_BASE = '/Data-Analyst---Master/';
+
+export default defineConfig(({command, isPreview}) => {
   return {
-    base: '/Data-Analyst---Master/',
+    base: command === 'build' || isPreview ? GITHUB_PAGES_BASE : '/',
     plugins: [
       react(),
       tailwindcss(),

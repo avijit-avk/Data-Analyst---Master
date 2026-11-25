@@ -7,13 +7,14 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Copy,
   Download,
   Eye,
   EyeOff,
   FileSpreadsheet,
   Lightbulb,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PRACTICE_LAB_PREVIEWS } from '../data/curriculum';
 import {
   getLabDrillStats,
@@ -25,9 +26,13 @@ import {
   PracticePromptKind,
   PracticeTopic,
 } from '../types/academy';
+import { buildHashHref, buildShareableUrl } from '../utils/hashRouter';
 
 interface PracticeLabViewProps {
   state: AcademyLocalState;
+  routeLabId?: string;
+  routeModuleId?: string;
+  onNavigateLab: (labId: string, moduleId?: string) => void;
   onBackToDashboard: () => void;
   onTogglePracticedLab: (labId: string) => void;
   onTogglePracticePrompt: (promptId: string) => void;
@@ -36,7 +41,7 @@ interface PracticeLabViewProps {
   onUpdatePromptAnswer: (promptId: string, answerText: string) => void;
   onCheckPromptAnswer: (promptId: string) => void;
   onUpdateScratchpad: (text: string) => void;
-  onOpenCourseOverview: (courseId: string) => void;
+  onOpenCourseOverview: (courseId: string, moduleId?: string) => void;
 }
 
 const PROMPT_KIND_STYLES: Record<PracticePromptKind, string> = {
@@ -47,6 +52,9 @@ const PROMPT_KIND_STYLES: Record<PracticePromptKind, string> = {
 
 export function PracticeLabView({
   state,
+  routeLabId,
+  routeModuleId,
+  onNavigateLab,
   onBackToDashboard,
   onTogglePracticedLab,
   onTogglePracticePrompt,
@@ -57,23 +65,73 @@ export function PracticeLabView({
   onUpdateScratchpad,
   onOpenCourseOverview,
 }: PracticeLabViewProps) {
-  const [selectedLabId, setSelectedLabId] = useState<string>(
-    PRACTICE_LAB_PREVIEWS[0].id
-  );
+  const initialLab =
+    (routeLabId && PRACTICE_LAB_PREVIEWS.find((l) => l.id === routeLabId)) ||
+    PRACTICE_LAB_PREVIEWS[0];
+  const initialTopicId =
+    (routeModuleId &&
+      initialLab.topics.find((t) => t.moduleId === routeModuleId)?.moduleId) ||
+    initialLab.topics[0].moduleId;
+
+  const [selectedLabId, setSelectedLabId] = useState<string>(initialLab.id);
   const [expandedModuleIds, setExpandedModuleIds] = useState<string[]>([
-    PRACTICE_LAB_PREVIEWS[0].topics[0].moduleId,
+    initialTopicId,
   ]);
   const [openHintIds, setOpenHintIds] = useState<string[]>([]);
   const [openReferenceIds, setOpenReferenceIds] = useState<string[]>([]);
   const [selectedSampleFileId, setSelectedSampleFileId] = useState<string>(
-    PRACTICE_LAB_PREVIEWS[0].sampleFiles[0].id
+    initialLab.sampleFiles[0].id
   );
   const [isPreviewExpanded, setIsPreviewExpanded] = useState<boolean>(true);
+  const [copiedLabLink, setCopiedLabLink] = useState<boolean>(false);
 
   const checkedPromptSet = useMemo(
     () => new Set(state.practicedPromptIds),
     [state.practicedPromptIds]
   );
+
+  // Synchronize local lab/topic state when hash route changes (back/forward or direct URL)
+  useEffect(() => {
+    const targetLab =
+      (routeLabId && PRACTICE_LAB_PREVIEWS.find((l) => l.id === routeLabId)) ||
+      PRACTICE_LAB_PREVIEWS[0];
+
+    setSelectedLabId(targetLab.id);
+    if (
+      targetLab.sampleFiles.length > 0 &&
+      !targetLab.sampleFiles.some((f) => f.id === selectedSampleFileId)
+    ) {
+      setSelectedSampleFileId(targetLab.sampleFiles[0].id);
+    }
+
+    if (routeModuleId) {
+      const validTopic = targetLab.topics.find(
+        (t) => t.moduleId === routeModuleId
+      );
+      if (validTopic) {
+        setExpandedModuleIds((prev) =>
+          prev.includes(validTopic.moduleId)
+            ? prev
+            : [...prev, validTopic.moduleId]
+        );
+        window.setTimeout(() => {
+          const el = document.getElementById(
+            `practice-topic-${validTopic.moduleId}`
+          );
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        }, 60);
+      }
+    } else if (routeLabId) {
+      const firstIncomplete = targetLab.topics.find((topic) =>
+        topic.prompts.some((p) => !checkedPromptSet.has(p.id))
+      );
+      setExpandedModuleIds([
+        (firstIncomplete ?? targetLab.topics[0]).moduleId,
+      ]);
+    }
+  }, [routeLabId, routeModuleId]);
 
   const activeLab = useMemo(
     () =>
@@ -107,23 +165,30 @@ export function PracticeLabView({
         setSelectedSampleFileId(targetLab.sampleFiles[0].id);
       }
       if (targetLab.topics.length > 0) {
-        // Open the first incomplete topic so learners immediately land where they left off
         const firstIncomplete = targetLab.topics.find((topic) =>
           topic.prompts.some((p) => !checkedPromptSet.has(p.id))
         );
-        setExpandedModuleIds([
-          (firstIncomplete ?? targetLab.topics[0]).moduleId,
-        ]);
+        const chosenTopicId = (firstIncomplete ?? targetLab.topics[0]).moduleId;
+        setExpandedModuleIds([chosenTopicId]);
+        onNavigateLab(targetLab.id, chosenTopicId);
+        return;
       }
     }
+    onNavigateLab(labId);
   };
 
   const toggleTopicExpanded = (moduleId: string) => {
+    const currentlyExpanded = expandedModuleIds.includes(moduleId);
     setExpandedModuleIds((prev) =>
-      prev.includes(moduleId)
+      currentlyExpanded
         ? prev.filter((id) => id !== moduleId)
         : [...prev, moduleId]
     );
+    if (!currentlyExpanded) {
+      onNavigateLab(activeLab.id, moduleId);
+    } else if (routeModuleId === moduleId) {
+      onNavigateLab(activeLab.id);
+    }
   };
 
   const allActiveTopicsExpanded = activeLab.topics.every((topic) =>
@@ -134,6 +199,9 @@ export function PracticeLabView({
     const activeIds = activeLab.topics.map((t) => t.moduleId);
     if (allActiveTopicsExpanded) {
       setExpandedModuleIds((prev) => prev.filter((id) => !activeIds.includes(id)));
+      if (routeModuleId) {
+        onNavigateLab(activeLab.id);
+      }
     } else {
       setExpandedModuleIds((prev) => Array.from(new Set([...prev, ...activeIds])));
     }
@@ -141,9 +209,31 @@ export function PracticeLabView({
 
   const stepToTopic = (targetTopic: PracticeTopic) => {
     setExpandedModuleIds([targetTopic.moduleId]);
+    onNavigateLab(activeLab.id, targetTopic.moduleId);
     const el = document.getElementById(`practice-topic-${targetTopic.moduleId}`);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+
+  const handleCopyLabLink = async () => {
+    const activeTopicId =
+      routeModuleId && expandedModuleIds.includes(routeModuleId)
+        ? routeModuleId
+        : expandedModuleIds.length === 1
+        ? expandedModuleIds[0]
+        : undefined;
+    const shareUrl = buildShareableUrl({
+      section: 'practice-lab',
+      labId: activeLab.id,
+      moduleId: activeTopicId,
+    });
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedLabLink(true);
+      window.setTimeout(() => setCopiedLabLink(false), 2000);
+    } catch {
+      onNavigateLab(activeLab.id, activeTopicId);
     }
   };
 
@@ -174,14 +264,20 @@ export function PracticeLabView({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
       {/* Page Header */}
       <div>
-        <button
-          type="button"
-          onClick={onBackToDashboard}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 mb-3 cursor-pointer"
+        <a
+          href={buildHashHref({ section: 'dashboard' })}
+          onClick={(e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+              return;
+            }
+            e.preventDefault();
+            onBackToDashboard();
+          }}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 mb-3"
         >
           <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
           <span>Back to Dashboard</span>
-        </button>
+        </a>
 
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
@@ -330,13 +426,41 @@ export function PracticeLabView({
               </div>
 
               <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <a
+                  href={buildHashHref({
+                    section: 'courses',
+                    courseId: activeLab.courseId,
+                  })}
+                  onClick={(e) => {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                      return;
+                    }
+                    e.preventDefault();
+                    onOpenCourseOverview(activeLab.courseId);
+                  }}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-950 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors whitespace-nowrap shrink-0"
+                >
+                  <span>Open Study Guide</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
+                </a>
+
                 <button
                   type="button"
-                  onClick={() => onOpenCourseOverview(activeLab.courseId)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-950 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                  onClick={handleCopyLabLink}
+                  title="Copy shareable link to this practice lab"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-950 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 >
-                  <span>Study Guide</span>
-                  <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
+                  {copiedLabLink ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-700" aria-hidden="true" />
+                      <span className="text-emerald-700">Link Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-slate-500" aria-hidden="true" />
+                      <span>Copy Lab Link</span>
+                    </>
+                  )}
                 </button>
 
                 <button
@@ -344,7 +468,7 @@ export function PracticeLabView({
                   onClick={toggleExpandAllActiveTopics}
                   className="px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-950 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 >
-                  {allActiveTopicsExpanded ? 'Collapse all' : 'Expand all'}
+                  {allActiveTopicsExpanded ? 'Collapse All Topics' : 'Expand All Topics'}
                 </button>
 
                 <button
@@ -362,8 +486,8 @@ export function PracticeLabView({
                   )}
                   <span>
                     {activeLabStats.status === 'completed'
-                      ? 'Clear drill'
-                      : 'Mark drill practiced'}
+                      ? 'Reset Lab Progress'
+                      : 'Mark Lab Complete'}
                   </span>
                 </button>
               </div>
@@ -432,7 +556,7 @@ export function PracticeLabView({
                   aria-expanded={isPreviewExpanded}
                   className="px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-950 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                 >
-                  {isPreviewExpanded ? 'Hide preview' : 'Show schema & preview'}
+                  {isPreviewExpanded ? 'Hide Preview' : 'Show Schema & Preview'}
                 </button>
                 <button
                   type="button"
@@ -943,8 +1067,8 @@ export function PracticeLabView({
                           <Check className="w-3.5 h-3.5" aria-hidden="true" />
                           <span>
                             {allTopicDone
-                              ? 'Clear topic'
-                              : 'Mark topic practiced'}
+                              ? 'Clear Topic'
+                              : 'Mark Topic Complete'}
                           </span>
                         </button>
 
@@ -956,7 +1080,7 @@ export function PracticeLabView({
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-950 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                             >
                               <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
-                              <span>Prev topic</span>
+                              <span>Previous Topic</span>
                             </button>
                           )}
                           {nextTopic && (
@@ -965,7 +1089,7 @@ export function PracticeLabView({
                               onClick={() => stepToTopic(nextTopic)}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                             >
-                              <span>Next topic</span>
+                              <span>Next Topic</span>
                               <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
                             </button>
                           )}

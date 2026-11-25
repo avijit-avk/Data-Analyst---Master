@@ -168,11 +168,38 @@ export interface PracticeLabPreview {
   topics: PracticeTopic[];
 }
 
+export interface LearningStage {
+  id: string;
+  stageNumber: string;
+  title: string;
+  subtitle: string;
+  outcome: string;
+  courseIds: string[];
+}
+
 export interface InterviewPrepTopic {
   id: string;
   area: string;
   title: string;
   description: string;
+  practiceLabId?: string;
+  practiceModuleId?: string;
+  courseId?: string;
+  courseModuleId?: string;
+}
+
+export interface InterviewRoundGuide {
+  id: string;
+  roundLabel: string;
+  title: string;
+  summary: string;
+  focusSkills: string[];
+  practiceLabId?: string;
+  courseId: string;
+  courseModuleId?: string;
+  freeResourceTitle: string;
+  freeResourceSource: string;
+  freeResourceUrl: string;
 }
 
 export interface AcademyLocalState {

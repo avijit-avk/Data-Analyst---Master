@@ -1,6 +1,8 @@
 import {
   Course,
   InterviewPrepTopic,
+  InterviewRoundGuide,
+  LearningStage,
   NavSection,
   PracticeLabPreview,
 } from '../types/academy';
@@ -84,10 +86,10 @@ export const COURSES: Course[] = [
             url: 'https://support.microsoft.com/en-us/office/excel-functions-by-category-5f91f4e9-7b42-46d2-9bd1-63f26a86c0eb',
           },
           {
-            title: 'Excel Formulas & Functions Video Courses',
-            source: 'freeCodeCamp',
+            title: 'GCFGlobal Excel Formulas & Functions Lessons',
+            source: 'GCFGlobal',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@freecodecamp/search?query=excel%20formulas',
+            url: 'https://edu.gcfglobal.org/en/excelformulas/',
           },
           {
             title: 'Logical, Text & Date Function Examples',
@@ -109,10 +111,10 @@ export const COURSES: Course[] = [
             url: 'https://support.microsoft.com/en-us/office/xlookup-function-b7fd680e-6d10-43e6-84f9-88eae8bf5929',
           },
           {
-            title: 'ExcelIsFun Lookup & Dynamic Array Playlists',
+            title: 'ExcelIsFun Video Tutorials & Lookup Playlists',
             source: 'ExcelIsFun (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@excelisfun/search?query=XLOOKUP',
+            url: 'https://www.youtube.com/@excelisfun/playlists',
           },
           {
             title: 'Dynamic Array Formulas & Spilled Behavior',
@@ -165,10 +167,10 @@ export const COURSES: Course[] = [
             url: 'https://learn.microsoft.com/en-us/power-query/power-query-what-is-power-query',
           },
           {
-            title: 'Power Query Tutorials & Walkthroughs',
-            source: 'ExcelIsFun (YouTube)',
+            title: 'About Power Query in Excel Guide & Overview',
+            source: 'Microsoft Support',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@excelisfun/search?query=Power%20Query',
+            url: 'https://support.microsoft.com/en-us/office/about-power-query-in-excel-7104fbee-9e62-4cb9-a02e-5bfb1a6c536a',
           },
           {
             title: 'Unpivot Columns Guided Exercise',
@@ -254,10 +256,10 @@ export const COURSES: Course[] = [
             url: 'https://mode.com/sql-tutorial/sql-aggregate-functions/',
           },
           {
-            title: 'Khan Academy SQL Aggregation Videos',
+            title: 'Khan Academy SQL Basics & Aggregation',
             source: 'Khan Academy',
             format: 'Video Tutorial',
-            url: 'https://www.khanacademy.org/computing/computer-programming/sql/sql-basics/v/aggregating-data',
+            url: 'https://www.khanacademy.org/computing/computer-programming/sql/sql-basics',
           },
           {
             title: 'PostgreSQL Aggregation Exercises',
@@ -316,10 +318,10 @@ export const COURSES: Course[] = [
             url: 'https://mode.com/sql-tutorial/sql-sub-queries/',
           },
           {
-            title: 'SQL CTE & Subqueries Video Tutorials',
-            source: 'freeCodeCamp',
+            title: 'More Advanced SQL Queries & Subqueries',
+            source: 'Khan Academy',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@freecodecamp/search?query=SQL%20CTE',
+            url: 'https://www.khanacademy.org/computing/computer-programming/sql/more-advanced-sql-queries',
           },
           {
             title: 'SQLZOO Nested SELECT Practice',
@@ -347,10 +349,10 @@ export const COURSES: Course[] = [
             url: 'https://mode.com/sql-tutorial/sql-window-functions/',
           },
           {
-            title: 'Window Functions Explained on YouTube',
-            source: 'Alex The Analyst',
+            title: 'Alex The Analyst SQL Playlists',
+            source: 'Alex The Analyst (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@AlexTheAnalyst/search?query=window%20functions',
+            url: 'https://www.youtube.com/@AlexTheAnalyst/playlists',
           },
           {
             title: 'Window Function Practice Problems',
@@ -430,10 +432,10 @@ export const COURSES: Course[] = [
             url: 'https://numpy.org/doc/stable/user/absolute_beginners.html',
           },
           {
-            title: 'freeCodeCamp NumPy Video Walkthroughs',
-            source: 'freeCodeCamp',
+            title: 'NumPy Learning Resources & Video Guides',
+            source: 'NumPy.org',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@freecodecamp/search?query=NumPy',
+            url: 'https://numpy.org/learn/',
           },
           {
             title: 'Data Analysis with Python Curriculum',
@@ -455,10 +457,10 @@ export const COURSES: Course[] = [
             url: 'https://pandas.pydata.org/docs/user_guide/10min.html',
           },
           {
-            title: 'Corey Schafer pandas Video Series',
+            title: 'Corey Schafer Python & pandas Playlists',
             source: 'Corey Schafer (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@coreyms/search?query=pandas',
+            url: 'https://www.youtube.com/@coreyms/playlists',
           },
           {
             title: 'Kaggle Pandas Grouping & Sorting Lab',
@@ -480,10 +482,10 @@ export const COURSES: Course[] = [
             url: 'https://pandas.pydata.org/docs/user_guide/missing_data.html',
           },
           {
-            title: 'Data Cleaning Video Tutorials in Python',
+            title: 'Keith Galli Python & pandas Channel',
             source: 'Keith Galli (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@KeithGalli/search?query=pandas%20data%20cleaning',
+            url: 'https://www.youtube.com/@KeithGalli/playlists',
           },
           {
             title: 'Kaggle Learn: Data Cleaning Exercises',
@@ -499,16 +501,16 @@ export const COURSES: Course[] = [
         summary: 'Distribution plots, trend comparisons, and readable multi-panel charts.',
         resources: [
           {
-            title: 'Matplotlib Quick Start & Seaborn Guide',
+            title: 'Matplotlib Quick Start Guide',
             source: 'Matplotlib Docs',
             format: 'Official Docs / Guide',
             url: 'https://matplotlib.org/stable/users/explain/quick_start.html',
           },
           {
-            title: 'Seaborn & Matplotlib Video Tutorials',
-            source: 'freeCodeCamp',
+            title: 'Seaborn Statistical Plotting Tutorials',
+            source: 'Seaborn Docs',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@freecodecamp/search?query=matplotlib%20seaborn',
+            url: 'https://seaborn.pydata.org/tutorial.html',
           },
           {
             title: 'Kaggle Learn: Data Visualization',
@@ -563,10 +565,10 @@ export const COURSES: Course[] = [
             url: 'https://openstax.org/books/introductory-statistics-2e/pages/2-introduction',
           },
           {
-            title: 'StatQuest: Mean, Variance & Standard Deviation',
-            source: 'StatQuest (YouTube)',
+            title: 'StatQuest: Statistics & Variance Video Index',
+            source: 'StatQuest',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@statquest/search?query=variance%20standard%20deviation',
+            url: 'https://statquest.org/video-index/',
           },
           {
             title: 'Basic Probability & Expectation Explorer',
@@ -613,10 +615,10 @@ export const COURSES: Course[] = [
             url: 'https://openstax.org/books/introductory-statistics-2e/pages/8-introduction',
           },
           {
-            title: 'StatQuest: Confidence Intervals Explained',
-            source: 'StatQuest (YouTube)',
+            title: 'Khan Academy Confidence Intervals Lessons',
+            source: 'Khan Academy',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@statquest/search?query=confidence%20intervals',
+            url: 'https://www.khanacademy.org/math/statistics-probability/confidence-intervals-one-sample',
           },
           {
             title: 'Frequentist Inference Visualizations',
@@ -638,10 +640,10 @@ export const COURSES: Course[] = [
             url: 'https://openstax.org/books/introductory-statistics-2e/pages/9-introduction',
           },
           {
-            title: 'StatQuest: p-values & Hypothesis Testing',
-            source: 'StatQuest (YouTube)',
+            title: 'Khan Academy Significance Tests & P-Values',
+            source: 'Khan Academy',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@statquest/search?query=p-values',
+            url: 'https://www.khanacademy.org/math/statistics-probability/significance-tests-one-sample',
           },
           {
             title: 'A/B Testing Calculators & Power Tools',
@@ -663,10 +665,10 @@ export const COURSES: Course[] = [
             url: 'https://openstax.org/books/introductory-statistics-2e/pages/12-introduction',
           },
           {
-            title: 'StatQuest: Linear Regression & R-Squared',
-            source: 'StatQuest (YouTube)',
+            title: 'StatQuest: Regression & Model Video Index',
+            source: 'StatQuest',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@statquest/search?query=linear%20regression',
+            url: 'https://statquest.org/video-index/',
           },
           {
             title: 'Interactive Regression Analysis Sandbox',
@@ -721,10 +723,10 @@ export const COURSES: Course[] = [
             url: 'https://learn.microsoft.com/en-us/power-bi/connect-data/desktop-data-sources',
           },
           {
-            title: 'Query Folding Explained Videos',
+            title: 'Guy in a Cube Power BI Video Library',
             source: 'Guy in a Cube (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@GuyInACube/search?query=query%20folding',
+            url: 'https://www.youtube.com/@GuyInACube/playlists',
           },
           {
             title: 'Clean, Transform & Load Data Module',
@@ -746,10 +748,10 @@ export const COURSES: Course[] = [
             url: 'https://learn.microsoft.com/en-us/power-bi/guidance/star-schema',
           },
           {
-            title: 'Star Schema & Data Modeling Videos',
-            source: 'Guy in a Cube (YouTube)',
+            title: 'Model Data in Power BI Learning Path',
+            source: 'Microsoft Learn',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@GuyInACube/search?query=star%20schema',
+            url: 'https://learn.microsoft.com/en-us/training/paths/model-data-power-bi/',
           },
           {
             title: 'Design a Data Model in Power BI Lab',
@@ -796,10 +798,10 @@ export const COURSES: Course[] = [
             url: 'https://learn.microsoft.com/en-us/dax/time-intelligence-functions-dax',
           },
           {
-            title: 'Time Intelligence & Date Tables Videos',
-            source: 'SQLBI (YouTube)',
+            title: 'SQLBI Free Video Library (Time Intelligence)',
+            source: 'SQLBI',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@SQLBI/search?query=time%20intelligence',
+            url: 'https://www.sqlbi.com/tv/',
           },
           {
             title: 'Create DAX Calculations Training Module',
@@ -821,10 +823,10 @@ export const COURSES: Course[] = [
             url: 'https://learn.microsoft.com/en-us/power-bi/create-reports/desktop-drillthrough',
           },
           {
-            title: 'Power BI Report Design & Bookmarks Videos',
-            source: 'Guy in a Cube (YouTube)',
+            title: 'Create & Use Analytics Reports Learning Path',
+            source: 'Microsoft Learn',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@GuyInACube/search?query=report%20design',
+            url: 'https://learn.microsoft.com/en-us/training/paths/create-use-analytics-reports-power-bi/',
           },
           {
             title: 'Design Power BI Reports Training Module',
@@ -879,10 +881,10 @@ export const COURSES: Course[] = [
             url: 'https://amplitude.com/books/north-star',
           },
           {
-            title: 'How to Measure Your Product & KPIs',
+            title: 'Y Combinator Startup Library: Metrics & KPIs',
             source: 'Y Combinator',
             format: 'Video Tutorial',
-            url: 'https://www.ycombinator.com/library/search?query=metrics',
+            url: 'https://www.ycombinator.com/library',
           },
           {
             title: 'AARRR Funnel Framework Breakdown',
@@ -935,10 +937,10 @@ export const COURSES: Course[] = [
             url: 'https://a16z.com/16-startup-metrics/',
           },
           {
-            title: 'Unit Economics & Startup Metrics Talks',
-            source: 'Y Combinator',
-            format: 'Video Tutorial',
-            url: 'https://www.ycombinator.com/library/search?query=unit%20economics',
+            title: 'SQL Business Analytics Training Cases',
+            source: 'Mode',
+            format: 'Interactive / Practice',
+            url: 'https://mode.com/sql-tutorial/sql-business-analytics-training/',
           },
         ],
       },
@@ -954,10 +956,10 @@ export const COURSES: Course[] = [
             url: 'https://posthog.com/docs/product-analytics/retention',
           },
           {
-            title: 'Business Case Diagnostics Walkthroughs',
+            title: 'Emma Ding Product Analytics Case Channel',
             source: 'Emma Ding (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@EmmaDing/search?query=metric%20drop',
+            url: 'https://www.youtube.com/@EmmaDing/playlists',
           },
           {
             title: 'Investigating a Metric Drop Case Study',
@@ -1037,10 +1039,10 @@ export const COURSES: Course[] = [
             url: 'https://datasetsearch.research.google.com/',
           },
           {
-            title: 'How to Scope an Analytics Portfolio Project',
+            title: 'Alex The Analyst Portfolio Project Playlists',
             source: 'Alex The Analyst (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@AlexTheAnalyst/search?query=portfolio%20project',
+            url: 'https://www.youtube.com/@AlexTheAnalyst/playlists',
           },
           {
             title: 'UCI Machine Learning & Analytics Archive',
@@ -1062,16 +1064,16 @@ export const COURSES: Course[] = [
             url: 'https://archive.ics.uci.edu/dataset/352/online+retail',
           },
           {
-            title: 'End-to-End SQL & Tableau/BI Project Video',
+            title: 'End-to-End SQL & BI Project Playlists',
             source: 'Alex The Analyst (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@AlexTheAnalyst/search?query=SQL%20data%20exploration',
+            url: 'https://www.youtube.com/@AlexTheAnalyst/playlists',
           },
           {
-            title: 'E-Commerce Datasets & Notebooks',
+            title: 'Kaggle Open Public Datasets Directory',
             source: 'Kaggle',
             format: 'Interactive / Practice',
-            url: 'https://www.kaggle.com/datasets?search=ecommerce',
+            url: 'https://www.kaggle.com/datasets',
           },
         ],
       },
@@ -1087,16 +1089,16 @@ export const COURSES: Course[] = [
             url: 'https://pandas.pydata.org/docs/getting_started/intro_tutorials/index.html',
           },
           {
-            title: 'freeCodeCamp Data Analysis Python Projects',
+            title: 'Data Analysis with Python Projects',
             source: 'freeCodeCamp',
-            format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@freecodecamp/search?query=data%20analysis%20with%20python',
+            format: 'Interactive / Practice',
+            url: 'https://www.freecodecamp.org/learn/data-analysis-with-python/',
           },
           {
-            title: 'Telco Customer Churn Dataset & Colab',
+            title: 'Kaggle Learn: Intro to Data Visualization & EDA',
             source: 'Kaggle',
             format: 'Interactive / Practice',
-            url: 'https://www.kaggle.com/datasets/blastchar/telco-customer-churn',
+            url: 'https://www.kaggle.com/learn/data-visualization',
           },
         ],
       },
@@ -1112,16 +1114,16 @@ export const COURSES: Course[] = [
             url: 'https://learn.microsoft.com/en-us/power-query/power-query-what-is-power-query',
           },
           {
-            title: 'Full Excel Dashboard Project Walkthrough',
+            title: 'Excel & BI Walkthrough Playlists',
             source: 'Alex The Analyst (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@AlexTheAnalyst/search?query=Excel%20project',
+            url: 'https://www.youtube.com/@AlexTheAnalyst/playlists',
           },
           {
-            title: 'Data.gov Logistics & Supply Datasets',
+            title: 'U.S. Government Open Datasets (Data.gov)',
             source: 'Data.gov',
             format: 'Interactive / Practice',
-            url: 'https://catalog.data.gov/dataset?q=supply+chain',
+            url: 'https://data.gov/',
           },
         ],
       },
@@ -1137,10 +1139,10 @@ export const COURSES: Course[] = [
             url: 'https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes',
           },
           {
-            title: 'Building a Data Analyst Portfolio Website',
-            source: 'Alex The Analyst (YouTube)',
+            title: 'Luke Barousse Portfolio & Career Channel',
+            source: 'Luke Barousse (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@AlexTheAnalyst/search?query=portfolio%20website',
+            url: 'https://www.youtube.com/@LukeBarousse/playlists',
           },
           {
             title: 'Publish with GitHub Pages Guide',
@@ -1164,16 +1166,16 @@ export const COURSES: Course[] = [
     estimatedHours: 14,
     overviewResources: [
       {
-        title: 'MIT Career Interview Preparation Guide',
+        title: 'The STAR Method for Behavioral Interviews',
         source: 'MIT CAPD',
         format: 'Official Docs / Guide',
         url: 'https://capd.mit.edu/resources/the-star-method-for-behavioral-interviews/',
       },
       {
-        title: 'Data Analyst Interview Prep Videos',
+        title: 'Alex The Analyst Career & Interview Playlists',
         source: 'Alex The Analyst (YouTube)',
         format: 'Video Tutorial',
-        url: 'https://www.youtube.com/@AlexTheAnalyst/search?query=interview',
+        url: 'https://www.youtube.com/@AlexTheAnalyst/playlists',
       },
       {
         title: 'DataLemur Free SQL & Analytics Questions',
@@ -1195,10 +1197,10 @@ export const COURSES: Course[] = [
             url: 'https://www.postgresql.org/docs/current/tutorial-window.html',
           },
           {
-            title: 'SQL Interview Walkthroughs',
+            title: 'Nick Singh / DataLemur SQL Walkthroughs',
             source: 'DataLemur (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@NickSinghTech/search?query=SQL%20interview',
+            url: 'https://www.youtube.com/@NickSinghTech/playlists',
           },
           {
             title: 'Free SQL Interview Questions',
@@ -1226,10 +1228,10 @@ export const COURSES: Course[] = [
             url: 'https://pandas.pydata.org/docs/user_guide/cookbook.html',
           },
           {
-            title: 'Python Coding Interview Patterns',
-            source: 'freeCodeCamp',
+            title: "CS50's Introduction to Programming with Python",
+            source: 'Harvard CS50',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@freecodecamp/search?query=python%20interview',
+            url: 'https://cs50.harvard.edu/python/',
           },
           {
             title: 'StrataScratch Python Questions',
@@ -1251,10 +1253,10 @@ export const COURSES: Course[] = [
             url: 'https://experimentguide.com/',
           },
           {
-            title: 'Product & A/B Testing Case Videos',
+            title: 'Emma Ding A/B & Product Case Playlists',
             source: 'Emma Ding (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@EmmaDing/search?query=A%2FB%20testing',
+            url: 'https://www.youtube.com/@EmmaDing/playlists',
           },
           {
             title: 'Sample Size Calculator & Formulas',
@@ -1276,10 +1278,10 @@ export const COURSES: Course[] = [
             url: 'https://docs.github.com/en/account-and-profile/setting-up-and-managing-your-github-profile/customizing-your-profile/managing-your-profile-readme',
           },
           {
-            title: 'How to Present Analytics Projects',
+            title: 'Luke Barousse Portfolio Walkthroughs',
             source: 'Luke Barousse (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@LukeBarousse/search?query=portfolio',
+            url: 'https://www.youtube.com/@LukeBarousse/playlists',
           },
           {
             title: 'Data Visualization Storytelling Guide',
@@ -1307,10 +1309,10 @@ export const COURSES: Course[] = [
             url: 'https://careerservices.fas.harvard.edu/channels/prepare-for-an-interview/',
           },
           {
-            title: 'Analyst Behavioral Interview Walkthroughs',
+            title: 'Alex The Analyst Interview Playlists',
             source: 'Alex The Analyst (YouTube)',
             format: 'Video Tutorial',
-            url: 'https://www.youtube.com/@AlexTheAnalyst/search?query=behavioral%20interview',
+            url: 'https://www.youtube.com/@AlexTheAnalyst/playlists',
           },
         ],
       },
@@ -1371,41 +1373,145 @@ export const PRACTICE_LAB_PREVIEWS: PracticeLabPreview[] = [
   },
 ];
 
+export const LEARNING_STAGES: LearningStage[] = [
+  {
+    id: 'stage-foundations',
+    stageNumber: 'Stage 01',
+    title: 'Core Data Foundations',
+    subtitle: 'Excel → SQL → Python',
+    outcome:
+      'Build spreadsheet modeling fluency, master relational SQL querying, and automate cleaning & EDA in Python.',
+    courseIds: ['excel', 'sql', 'python'],
+  },
+  {
+    id: 'stage-quantitative-bi',
+    stageNumber: 'Stage 02',
+    title: 'Quantitative & BI Decision-Making',
+    subtitle: 'Statistics → Power BI → Business Analytics',
+    outcome:
+      'Quantify uncertainty with A/B testing, model executive star schemas in DAX, and diagnose funnel & unit economics.',
+    courseIds: ['statistics', 'power-bi', 'business-analytics'],
+  },
+  {
+    id: 'stage-job-ready',
+    stageNumber: 'Stage 03',
+    title: 'Portfolio & Interview Readiness',
+    subtitle: 'Real-World Projects → Interview Preparation',
+    outcome:
+      'Publish documented end-to-end case studies on GitHub and pass timed SQL, Python, metric case, and STAR rounds.',
+    courseIds: ['real-world-projects', 'interview-preparation'],
+  },
+];
+
 export const INTERVIEW_CHECKLIST: InterviewPrepTopic[] = [
   {
     id: 'ic-sql-joins',
     area: 'SQL & Modeling',
     title: 'Explain LEFT vs. INNER join row multiplication',
     description: 'Walk through how many-to-many keys affect aggregate sums and how to validate row counts.',
+    practiceLabId: 'lab-sql',
+    practiceModuleId: 'sql-m3',
+    courseId: 'sql',
+    courseModuleId: 'sql-m3',
   },
   {
     id: 'ic-sql-windows',
     area: 'SQL & Modeling',
     title: 'Write Top-N per category with DENSE_RANK and CTEs',
     description: 'Handle ties cleanly and filter window output inside an outer query or CTE.',
+    practiceLabId: 'lab-sql',
+    practiceModuleId: 'sql-m5',
+    courseId: 'sql',
+    courseModuleId: 'sql-m5',
   },
   {
     id: 'ic-stat-ab',
     area: 'Statistics & Testing',
     title: 'Outline an end-to-end A/B test design',
     description: 'Define primary metric, guardrail metrics, randomization unit, and stopping rules.',
+    practiceLabId: 'lab-statistics',
+    practiceModuleId: 'stat-m4',
+    courseId: 'statistics',
+    courseModuleId: 'stat-m4',
   },
   {
     id: 'ic-case-drop',
     area: 'Business Case',
     title: 'Diagnose a 15% week-over-week conversion drop',
     description: 'Separate tracking bugs, seasonality, traffic mix shifts, and funnel step regressions.',
+    courseId: 'business-analytics',
+    courseModuleId: 'ba-m4',
   },
   {
     id: 'ic-python-clean',
     area: 'Python',
     title: 'Summarize pandas merge strategies and missing values',
     description: 'Articulate inner/left merges, validation flags, and when to drop vs. impute.',
+    practiceLabId: 'lab-python',
+    practiceModuleId: 'py-m4',
+    courseId: 'python',
+    courseModuleId: 'py-m4',
   },
   {
     id: 'ic-portfolio-story',
     area: 'Portfolio Walkthrough',
     title: 'Deliver a concise 3-minute project walkthrough',
     description: 'State the business question, dataset limitations, method choice, and concrete outcome.',
+    courseId: 'interview-preparation',
+    courseModuleId: 'int-m4',
+  },
+];
+
+export const INTERVIEW_ROUND_GUIDES: InterviewRoundGuide[] = [
+  {
+    id: 'round-sql',
+    roundLabel: 'Round 01',
+    title: 'SQL Live Coding & Query Auditing',
+    summary: 'Timed aggregation, join fan-out checks, CTE chaining, and window-function ranking under interview constraints.',
+    focusSkills: ['CTEs & Subqueries', 'DENSE_RANK / LAG', 'Null & Fan-out Checks'],
+    practiceLabId: 'lab-sql',
+    courseId: 'interview-preparation',
+    courseModuleId: 'int-m1',
+    freeResourceTitle: 'DataLemur Free SQL Questions',
+    freeResourceSource: 'DataLemur',
+    freeResourceUrl: 'https://datalemur.com/questions',
+  },
+  {
+    id: 'round-python',
+    roundLabel: 'Round 02',
+    title: 'Python Data Cleaning & Transformation',
+    summary: 'Manipulating messy CSV exports with pandas, handling nulls/duplicates, and writing clean groupby pipelines.',
+    focusSkills: ['pandas Merge & GroupBy', 'Null & Type Triage', 'Edge-Case Verification'],
+    practiceLabId: 'lab-python',
+    courseId: 'interview-preparation',
+    courseModuleId: 'int-m2',
+    freeResourceTitle: 'pandas Official Cookbook',
+    freeResourceSource: 'pandas Docs',
+    freeResourceUrl: 'https://pandas.pydata.org/docs/user_guide/cookbook.html',
+  },
+  {
+    id: 'round-case',
+    roundLabel: 'Round 03',
+    title: 'Product Metrics & A/B Experiment Cases',
+    summary: 'Diagnosing sudden KPI changes, defining North Star & guardrail metrics, and sizing controlled tests.',
+    focusSkills: ['Root-Cause Trees', 'Sample Size & Power', 'Mix-Shift Isolation'],
+    practiceLabId: 'lab-statistics',
+    courseId: 'business-analytics',
+    courseModuleId: 'ba-m4',
+    freeResourceTitle: 'Investigating a Metric Drop Case',
+    freeResourceSource: 'Mode',
+    freeResourceUrl: 'https://mode.com/sql-tutorial/a-drop-in-user-engagement/',
+  },
+  {
+    id: 'round-portfolio',
+    roundLabel: 'Round 04',
+    title: 'Portfolio Walkthrough & STAR Behavioral',
+    summary: 'Framing business impact in 3 minutes, defending dataset caveats, and answering cross-functional conflict prompts.',
+    focusSkills: ['3-Min Project Pitch', 'STAR Story Structure', 'Stakeholder Alignment'],
+    courseId: 'interview-preparation',
+    courseModuleId: 'int-m5',
+    freeResourceTitle: 'MIT STAR Behavioral Method',
+    freeResourceSource: 'MIT CAPD',
+    freeResourceUrl: 'https://capd.mit.edu/resources/the-star-method-for-behavioral-interviews/',
   },
 ];

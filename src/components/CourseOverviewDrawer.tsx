@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  Copy,
   Crosshair,
   Loader2,
   Plus,
@@ -12,7 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { COURSES } from '../data/curriculum';
+import { COURSES, PRACTICE_LAB_PREVIEWS } from '../data/curriculum';
 import {
   NewPersonalLinkInput,
   normalizeSafeHttpUrl,
@@ -24,6 +25,7 @@ import {
   CuratedResourceFormat,
   PersonalLinkFormat,
 } from '../types/academy';
+import { buildHashHref, buildShareableUrl } from '../utils/hashRouter';
 import { autoAssignStudyResource } from '../utils/resourceMatcher';
 import {
   extractTimestampFromYouTubeUrl,
@@ -39,8 +41,11 @@ interface CourseOverviewDrawerProps {
   course: Course | null;
   progress: CourseProgressEntry | null;
   isFocused: boolean;
+  focusedModuleId?: string;
   onClose: () => void;
-  onSelectCourse: (courseId: string) => void;
+  onSelectCourse: (courseId: string, moduleId?: string) => void;
+  onSelectModuleHash?: (courseId: string, moduleId?: string) => void;
+  onOpenPracticeLab?: (labId: string, moduleId?: string) => void;
   onToggleModule: (courseId: string, moduleId: string) => void;
   onSetStatus: (courseId: string, status: CourseStatus) => void;
   onToggleBookmark: (courseId: string) => void;
@@ -104,8 +109,11 @@ export function CourseOverviewDrawer({
   course,
   progress,
   isFocused,
+  focusedModuleId,
   onClose,
   onSelectCourse,
+  onSelectModuleHash,
+  onOpenPracticeLab,
   onToggleModule,
   onSetStatus,
   onToggleBookmark,
@@ -120,6 +128,7 @@ export function CourseOverviewDrawer({
   const [pendingExpandModuleIds, setPendingExpandModuleIds] = useState<string[]>(
     []
   );
+  const [copiedShareLink, setCopiedShareLink] = useState(false);
 
   const [newTitle, setNewTitle] = useState('');
   const [newUrl, setNewUrl] = useState('');
@@ -161,9 +170,13 @@ export function CourseOverviewDrawer({
       const validSet = new Set(course.modules.map((m) => m.id));
       setExpandedModuleIds(pendingExpandModuleIds.filter((id) => validSet.has(id)));
       setPendingExpandModuleIds([]);
+    } else if (course && focusedModuleId) {
+      const validSet = new Set(course.modules.map((m) => m.id));
+      setExpandedModuleIds(validSet.has(focusedModuleId) ? [focusedModuleId] : []);
     } else {
       setExpandedModuleIds([]);
     }
+    setCopiedShareLink(false);
     setNewTitle('');
     setNewUrl('');
     setNewFormat('Video');
@@ -180,6 +193,22 @@ export function CourseOverviewDrawer({
     setAddError('');
     setSaveSummaryNotice(null);
   }, [course?.id]);
+
+  useEffect(() => {
+    if (!course || !focusedModuleId) return;
+    const valid = course.modules.some((m) => m.id === focusedModuleId);
+    if (!valid) return;
+    setExpandedModuleIds((prev) =>
+      prev.includes(focusedModuleId) ? prev : [...prev, focusedModuleId]
+    );
+    const timer = window.setTimeout(() => {
+      const el = document.getElementById(`study-module-${focusedModuleId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 60);
+    return () => window.clearTimeout(timer);
+  }, [course, focusedModuleId]);
 
   useEffect(() => {
     if (!course) return;
@@ -337,19 +366,54 @@ export function CourseOverviewDrawer({
   const showTimestampField =
     !isChapterSplitMode && (newFormat === 'Video' || isYouTubeUrl(newUrl));
 
+  const matchingPracticeLab = PRACTICE_LAB_PREVIEWS.find(
+    (lab) => lab.courseId === course.id
+  );
+
   const toggleModuleExpanded = (moduleId: string) => {
+    const currentlyExpanded = expandedModuleIds.includes(moduleId);
     setExpandedModuleIds((prev) =>
-      prev.includes(moduleId)
+      currentlyExpanded
         ? prev.filter((id) => id !== moduleId)
         : [...prev, moduleId]
     );
+    if (!currentlyExpanded) {
+      onSelectModuleHash?.(course.id, moduleId);
+    } else if (focusedModuleId === moduleId) {
+      onSelectModuleHash?.(course.id, undefined);
+    }
   };
 
   const toggleExpandAll = () => {
     if (allExpanded) {
       setExpandedModuleIds([]);
+      if (focusedModuleId) {
+        onSelectModuleHash?.(course.id, undefined);
+      }
     } else {
       setExpandedModuleIds(course.modules.map((m) => m.id));
+    }
+  };
+
+  const handleCopyShareLink = async () => {
+    const activeMod =
+      focusedModuleId && expandedModuleIds.includes(focusedModuleId)
+        ? focusedModuleId
+        : expandedModuleIds.length === 1
+        ? expandedModuleIds[0]
+        : undefined;
+    const shareUrl = buildShareableUrl({
+      section: 'courses',
+      courseId: course.id,
+      moduleId: activeMod,
+    });
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedShareLink(true);
+      window.setTimeout(() => setCopiedShareLink(false), 2000);
+    } catch {
+      // Fallback: focus location hash if clipboard is unavailable
+      onSelectModuleHash?.(course.id, activeMod);
     }
   };
 
@@ -598,21 +662,70 @@ export function CourseOverviewDrawer({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close study guide"
-            className="w-10 h-10 rounded-lg inline-flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
-          >
-            <X className="w-5 h-5" aria-hidden="true" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleCopyShareLink}
+              title="Copy direct shareable link to this study guide"
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 hover:text-slate-950 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              {copiedShareLink ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-700" aria-hidden="true" />
+                  <span className="text-emerald-700">Link Copied</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5 text-slate-500" aria-hidden="true" />
+                  <span className="hidden sm:inline">Copy Link</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close study guide"
+              className="w-10 h-10 rounded-lg inline-flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+            >
+              <X className="w-5 h-5" aria-hidden="true" />
+            </button>
+          </div>
         </div>
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
-          <p className="text-sm text-slate-600 leading-relaxed">
-            {course.shortDescription}
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <p className="text-sm text-slate-600 leading-relaxed">
+              {course.shortDescription}
+            </p>
+            {matchingPracticeLab && (
+              <a
+                href={buildHashHref({
+                  section: 'practice-lab',
+                  labId: matchingPracticeLab.id,
+                })}
+                onClick={(e) => {
+                  if (
+                    e.metaKey ||
+                    e.ctrlKey ||
+                    e.shiftKey ||
+                    e.altKey ||
+                    e.button !== 0 ||
+                    !onOpenPracticeLab
+                  ) {
+                    return;
+                  }
+                  e.preventDefault();
+                  onOpenPracticeLab(matchingPracticeLab.id);
+                }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap shrink-0 self-start sm:self-auto"
+              >
+                <span>Open Practice Lab</span>
+                <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
+              </a>
+            )}
+          </div>
 
           {/* Status + focus/bookmark controls */}
           <div className="flex flex-wrap items-center justify-between gap-3 py-4 border-y border-slate-100">
@@ -652,7 +765,7 @@ export function CourseOverviewDrawer({
                 }`}
               >
                 <Crosshair className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>{isFocused ? 'Focused' : 'Set Focus'}</span>
+                <span>{isFocused ? 'Current Focus' : 'Set Current Focus'}</span>
               </button>
 
               <button
@@ -669,7 +782,7 @@ export function CourseOverviewDrawer({
                   className={`w-3.5 h-3.5 ${progress.bookmarked ? 'fill-white' : ''}`}
                   aria-hidden="true"
                 />
-                <span>{progress.bookmarked ? 'Bookmarked' : 'Bookmark'}</span>
+                <span>{progress.bookmarked ? 'Bookmarked' : 'Bookmark Course'}</span>
               </button>
             </div>
           </div>
@@ -1090,7 +1203,7 @@ export function CourseOverviewDrawer({
                   onClick={toggleExpandAll}
                   className="text-xs font-medium text-blue-700 hover:text-blue-800 cursor-pointer whitespace-nowrap"
                 >
-                  {allExpanded ? 'Collapse all' : 'Expand all'}
+                  {allExpanded ? 'Collapse All Topics' : 'Expand All Topics'}
                 </button>
               </div>
             </div>
@@ -1110,7 +1223,7 @@ export function CourseOverviewDrawer({
                   mod.resources.length + moduleCustomLinks.length;
 
                 return (
-                  <li key={mod.id} className="p-4">
+                  <li key={mod.id} id={`study-module-${mod.id}`} className="p-4">
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                       <button
                         type="button"

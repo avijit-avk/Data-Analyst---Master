@@ -1,5 +1,6 @@
 import { NAV_ITEMS } from '../data/curriculum';
 import { NavSection } from '../types/academy';
+import { buildSectionHashHref } from '../utils/hashRouter';
 
 interface FooterProps {
   onSelectSection: (section: NavSection) => void;
@@ -14,23 +15,26 @@ export function Footer({ onSelectSection }: FooterProps) {
             Data Analytics Masters — Personal Edition
           </p>
           <p className="text-xs text-slate-500 mt-1">
-            All curriculum progress and personal settings stay in your browser&apos;s local storage.
+            All curriculum progress, practice answers, and personal links stay in your browser&apos;s local storage.
           </p>
         </div>
 
         <nav aria-label="Footer navigation" className="flex flex-wrap items-center gap-x-6 gap-y-2">
           {NAV_ITEMS.map((item) => (
-            <button
+            <a
               key={item.id}
-              type="button"
-              onClick={() => {
+              href={buildSectionHashHref(item.id)}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                  return;
+                }
+                e.preventDefault();
                 onSelectSection(item.id);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors whitespace-nowrap cursor-pointer"
+              className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors whitespace-nowrap"
             >
               {item.label}
-            </button>
+            </a>
           ))}
         </nav>
       </div>

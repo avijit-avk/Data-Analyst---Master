@@ -1,6 +1,11 @@
-import { ArrowRight, Search, SlidersHorizontal } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Check, Search, SlidersHorizontal } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { COURSES, INTERVIEW_CHECKLIST, PRACTICE_LAB_PREVIEWS } from '../data/curriculum';
+import {
+  COURSES,
+  INTERVIEW_CHECKLIST,
+  LEARNING_STAGES,
+  PRACTICE_LAB_PREVIEWS,
+} from '../data/curriculum';
 import { getOverallPracticeStats } from '../data/practiceDrills';
 import {
   AcademyLocalState,
@@ -8,12 +13,14 @@ import {
   CourseStatus,
   NavSection,
 } from '../types/academy';
+import { buildHashHref, buildSectionHashHref } from '../utils/hashRouter';
 import { CourseCard } from './CourseCard';
 
 interface DashboardHomeProps {
   state: AcademyLocalState;
   onSelectSection: (section: NavSection) => void;
-  onOpenCourseOverview: (courseId: string) => void;
+  onOpenCourseOverview: (courseId: string, moduleId?: string) => void;
+  onOpenPracticeLab: (labId: string, moduleId?: string) => void;
   onOpenSettings: () => void;
   onToggleBookmark: (courseId: string) => void;
   onToggleFocus: (courseId: string) => void;
@@ -34,6 +41,7 @@ export function DashboardHome({
   state,
   onSelectSection,
   onOpenCourseOverview,
+  onOpenPracticeLab,
   onOpenSettings,
   onToggleBookmark,
   onToggleFocus,
@@ -65,7 +73,40 @@ export function DashboardHome({
       ? COURSES.find((c) => c.id === state.settings.focusCourseId) ?? null
       : null;
 
+    // Next recommended course in job-ready sequence strictly from local progress
+    const nextSequentialCourse =
+      focusCourse ??
+      COURSES.find(
+        (c) => state.courseProgress[c.id]?.status !== 'completed'
+      ) ??
+      COURSES[COURSES.length - 1];
+
+    const nextMatchingLab = PRACTICE_LAB_PREVIEWS.find(
+      (lab) => lab.courseId === nextSequentialCourse.id
+    );
+
     const practiceStats = getOverallPracticeStats(PRACTICE_LAB_PREVIEWS, state);
+
+    const stageSummaries = LEARNING_STAGES.map((stage) => {
+      const stageCourses = stage.courseIds
+        .map((id) => COURSES.find((c) => c.id === id))
+        .filter((c): c is NonNullable<typeof c> => Boolean(c));
+      const doneCourses = stageCourses.filter(
+        (c) => state.courseProgress[c.id]?.status === 'completed'
+      ).length;
+      const doneModules = stageCourses.reduce(
+        (sum, c) => sum + (state.courseProgress[c.id]?.completedModuleIds.length ?? 0),
+        0
+      );
+      const stageModules = stageCourses.reduce((sum, c) => sum + c.modules.length, 0);
+      return {
+        stage,
+        stageCourses,
+        doneCourses,
+        doneModules,
+        stageModules,
+      };
+    });
 
     return {
       completedCourses,
@@ -74,7 +115,10 @@ export function DashboardHome({
       totalModules,
       percent,
       focusCourse,
+      nextSequentialCourse,
+      nextMatchingLab,
       practiceStats,
+      stageSummaries,
     };
   }, [state]);
 
@@ -119,7 +163,7 @@ export function DashboardHome({
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
           <div className="max-w-2xl">
             <p className="text-xs font-medium text-slate-500">
-              Personal Edition · Local browser storage
+              Personal Edition · Free Job-Ready Curriculum · Browser Local Storage
             </p>
             <h1
               id="academy-hero-heading"
@@ -130,30 +174,46 @@ export function DashboardHome({
                 : 'Your Personal Data Analytics Curriculum'}
             </h1>
             <p className="mt-3 text-base text-slate-600 leading-relaxed">
-              Organize your self-paced study across eight core analytics subjects, track syllabus milestones locally, and keep personal notes without external accounts.
+              Follow a structured, step-by-step free learning sequence from spreadsheets and SQL through Python, statistics, and BI into real portfolio projects and interview prep.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 shrink-0">
-            {metrics.focusCourse ? (
-              <button
-                type="button"
-                onClick={() => onOpenCourseOverview(metrics.focusCourse!.id)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-              >
-                <span>Resume {metrics.focusCourse.title}</span>
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => onSelectSection('courses')}
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-              >
-                <span>Browse Curriculum</span>
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </button>
-            )}
+            <a
+              href={buildHashHref({
+                section: 'courses',
+                courseId: metrics.nextSequentialCourse.id,
+              })}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                  return;
+                }
+                e.preventDefault();
+                onOpenCourseOverview(metrics.nextSequentialCourse.id);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors whitespace-nowrap shrink-0"
+            >
+              <span>
+                {metrics.focusCourse
+                  ? `Resume ${metrics.focusCourse.title}`
+                  : `Start Step ${metrics.nextSequentialCourse.indexLabel}: ${metrics.nextSequentialCourse.title}`}
+              </span>
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </a>
+
+            <a
+              href={buildSectionHashHref('courses')}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                  return;
+                }
+                e.preventDefault();
+                onSelectSection('courses');
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-800 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-lg transition-colors whitespace-nowrap shrink-0"
+            >
+              <span>View Learning Sequence</span>
+            </a>
 
             <button
               type="button"
@@ -161,7 +221,7 @@ export function DashboardHome({
               className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               <SlidersHorizontal className="w-4 h-4 text-slate-500" aria-hidden="true" />
-              <span>Personalize</span>
+              <span>Personal Settings</span>
             </button>
           </div>
         </div>
@@ -216,6 +276,120 @@ export function DashboardHome({
         </div>
       </section>
 
+      {/* Job-Ready 3-Stage Learning Sequence */}
+      <section aria-labelledby="learning-sequence-heading" className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+          <div>
+            <h2
+              id="learning-sequence-heading"
+              className="font-display text-xl font-semibold text-slate-950 tracking-tight"
+            >
+              Job-Ready Free Learning Sequence
+            </h2>
+            <p className="text-sm text-slate-500 mt-0.5">
+              Three sequential phases pairing curated free docs and video courses with hands-on CSV drills.
+            </p>
+          </div>
+
+          {metrics.nextMatchingLab && (
+            <a
+              href={buildHashHref({
+                section: 'practice-lab',
+                labId: metrics.nextMatchingLab.id,
+              })}
+              onClick={(e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                  return;
+                }
+                e.preventDefault();
+                onOpenPracticeLab(metrics.nextMatchingLab!.id);
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 hover:text-blue-800 whitespace-nowrap"
+            >
+              <span>Practice {metrics.nextSequentialCourse.title} CSV Drills</span>
+              <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </a>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {metrics.stageSummaries.map(
+            ({ stage, stageCourses, doneCourses, doneModules, stageModules }) => {
+              const stageDone =
+                stageCourses.length > 0 && doneCourses === stageCourses.length;
+              return (
+                <div
+                  key={stage.id}
+                  className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-between gap-4"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <span className="font-mono font-medium text-blue-700">
+                        {stage.stageNumber}
+                      </span>
+                      <span
+                        className={`font-mono tabular-nums ${
+                          stageDone ? 'text-emerald-700 font-medium' : 'text-slate-500'
+                        }`}
+                      >
+                        {stageDone && (
+                          <Check className="w-3.5 h-3.5 inline mr-1" aria-hidden="true" />
+                        )}
+                        {doneModules}/{stageModules} topics
+                      </span>
+                    </div>
+                    <h3 className="font-display text-base font-semibold text-slate-950">
+                      {stage.title}
+                    </h3>
+                    <p className="text-xs font-medium text-slate-700">
+                      {stage.subtitle}
+                    </p>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      {stage.outcome}
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 flex flex-wrap gap-1.5">
+                    {stageCourses.map((c) => {
+                      const cDone = state.courseProgress[c.id]?.status === 'completed';
+                      return (
+                        <a
+                          key={c.id}
+                          href={buildHashHref({ section: 'courses', courseId: c.id })}
+                          onClick={(e) => {
+                            if (
+                              e.metaKey ||
+                              e.ctrlKey ||
+                              e.shiftKey ||
+                              e.altKey ||
+                              e.button !== 0
+                            ) {
+                              return;
+                            }
+                            e.preventDefault();
+                            onOpenCourseOverview(c.id);
+                          }}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors ${
+                            cDone
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100/70'
+                              : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-950'
+                          }`}
+                        >
+                          <span className="font-mono text-[11px] opacity-70">
+                            {c.indexLabel}
+                          </span>
+                          <span>{c.title}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            }
+          )}
+        </div>
+      </section>
+
       {/* Eight Functional Course Cards */}
       <section aria-labelledby="courses-grid-heading" className="space-y-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -227,7 +401,7 @@ export function DashboardHome({
               Core Curriculum
             </h2>
             <p className="text-sm text-slate-500 mt-0.5">
-              Eight foundational tracks. Open any card to check off syllabus topics or record study notes.
+              Eight sequential tracks. Open any study guide to check off syllabus topics, access free resources, or save custom links.
             </p>
           </div>
 
@@ -345,71 +519,104 @@ export function DashboardHome({
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <button
-            type="button"
-            onClick={() => onSelectSection('practice-lab')}
-            className="text-left bg-white border border-slate-200 hover:border-slate-300 rounded-xl p-5 transition-colors group cursor-pointer"
+          <a
+            href={buildSectionHashHref('practice-lab')}
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                return;
+              }
+              e.preventDefault();
+              onSelectSection('practice-lab');
+            }}
+            className="text-left bg-white border border-slate-200 hover:border-slate-300 rounded-xl p-5 transition-colors group flex flex-col justify-between"
           >
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-display text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
-                Practice Lab
-              </span>
-              <ArrowRight
-                className="w-4 h-4 text-slate-400 group-hover:text-blue-700 transition-colors"
-                aria-hidden="true"
-              />
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-display text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
+                  Practice Lab
+                </span>
+                <ArrowRight
+                  className="w-4 h-4 text-slate-400 group-hover:text-blue-700 transition-colors"
+                  aria-hidden="true"
+                />
+              </div>
+              <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+                Downloadable CSV datasets and guided answer-checked drills across Excel, SQL, Python, Statistics, and Power BI.
+              </p>
             </div>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              Drill directory and local practice checklist across Excel, SQL, Python, Statistics, and Power BI.
-            </p>
-            <p className="mt-3 font-mono text-xs text-slate-500 tabular-nums">
-              {metrics.practiceStats.completedPrompts} / {metrics.practiceStats.totalPrompts} prompts · {metrics.practiceStats.completedDrills} / {metrics.practiceStats.totalDrills} drills completed
-            </p>
-          </button>
+            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
+              <span className="font-mono text-slate-500 tabular-nums">
+                {metrics.practiceStats.completedPrompts} / {metrics.practiceStats.totalPrompts} prompts
+              </span>
+              <span className="font-medium text-blue-700">Open Practice Lab &rarr;</span>
+            </div>
+          </a>
 
-          <button
-            type="button"
-            onClick={() => onSelectSection('interview-prep')}
-            className="text-left bg-white border border-slate-200 hover:border-slate-300 rounded-xl p-5 transition-colors group cursor-pointer"
+          <a
+            href={buildSectionHashHref('interview-prep')}
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                return;
+              }
+              e.preventDefault();
+              onSelectSection('interview-prep');
+            }}
+            className="text-left bg-white border border-slate-200 hover:border-slate-300 rounded-xl p-5 transition-colors group flex flex-col justify-between"
           >
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-display text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
-                Interview Preparation
-              </span>
-              <ArrowRight
-                className="w-4 h-4 text-slate-400 group-hover:text-blue-700 transition-colors"
-                aria-hidden="true"
-              />
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-display text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
+                  Interview Preparation
+                </span>
+                <ArrowRight
+                  className="w-4 h-4 text-slate-400 group-hover:text-blue-700 transition-colors"
+                  aria-hidden="true"
+                />
+              </div>
+              <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+                Structured round playbooks and readiness checklist covering SQL joins, A/B design, case diagnostics, and STAR pitch.
+              </p>
             </div>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              Readiness checklist covering SQL joins, A/B experiment design, case diagnostics, and portfolio pitch.
-            </p>
-            <p className="mt-3 font-mono text-xs text-slate-500 tabular-nums">
-              {state.completedInterviewItemIds.length} / {INTERVIEW_CHECKLIST.length} topics reviewed
-            </p>
-          </button>
+            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
+              <span className="font-mono text-slate-500 tabular-nums">
+                {state.completedInterviewItemIds.length} / {INTERVIEW_CHECKLIST.length} reviewed
+              </span>
+              <span className="font-medium text-blue-700">Open Interview Prep &rarr;</span>
+            </div>
+          </a>
 
-          <button
-            type="button"
-            onClick={() => onSelectSection('progress')}
-            className="text-left bg-white border border-slate-200 hover:border-slate-300 rounded-xl p-5 transition-colors group cursor-pointer"
+          <a
+            href={buildSectionHashHref('progress')}
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                return;
+              }
+              e.preventDefault();
+              onSelectSection('progress');
+            }}
+            className="text-left bg-white border border-slate-200 hover:border-slate-300 rounded-xl p-5 transition-colors group flex flex-col justify-between"
           >
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-display text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
-                Progress Ledger
-              </span>
-              <ArrowRight
-                className="w-4 h-4 text-slate-400 group-hover:text-blue-700 transition-colors"
-                aria-hidden="true"
-              />
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-display text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
+                  Progress Ledger
+                </span>
+                <ArrowRight
+                  className="w-4 h-4 text-slate-400 group-hover:text-blue-700 transition-colors"
+                  aria-hidden="true"
+                />
+              </div>
+              <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+                Clean tabular audit of all eight courses, checked modules, Practice Lab completion, and saved personal notes.
+              </p>
             </div>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              Clean tabular overview of all eight courses, checked modules, and saved personal notes.
-            </p>
-            <p className="mt-3 font-mono text-xs text-slate-500 tabular-nums">
-              {metrics.completedModules} / {metrics.totalModules} modules checked
-            </p>
-          </button>
+            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
+              <span className="font-mono text-slate-500 tabular-nums">
+                {metrics.completedModules} / {metrics.totalModules} modules checked
+              </span>
+              <span className="font-medium text-blue-700">View Progress Ledger &rarr;</span>
+            </div>
+          </a>
         </div>
       </section>
     </div>
