@@ -248,6 +248,204 @@ export const LMS_QUIZZES: LmsQuiz[] = [
     ],
   },
   {
+    id: 'quiz-mod-python',
+    moduleId: 'mod-python',
+    title: 'Python for Data Analysis Quiz',
+    subtitle: 'Data cleaning, pandas filtering, merges, groupby aggregations, and vectorized NumPy stats.',
+    passingPercent: 80,
+    questions: [
+      {
+        id: 'qpy-1',
+        topicTag: 'String Cleaning',
+        prompt:
+          'Which Python expression safely normalizes `"  ApexFreight "` and `"apexfreight"` into the exact same canonical group key?',
+        options: [
+          'carrier.split()',
+          'carrier.str.strip().str.lower()',
+          'int(carrier.strip())',
+          'carrier.dropna()',
+        ],
+        correctIndex: 1,
+        explanation:
+          'Chaining .str.strip().str.lower() removes leading/trailing spaces and converts uppercase/mixed-case characters to lowercase consistently.',
+      },
+      {
+        id: 'qpy-2',
+        topicTag: 'Boolean Filtering',
+        prompt:
+          'In pandas, why does `df[df["status"] == "Completed" and df["quantity"] >= 2]` raise a ValueError?',
+        options: [
+          'pandas requires SQL WHERE instead of brackets',
+          'Python `and` cannot evaluate element-wise Series booleans; you must use `&` with parentheses around each condition',
+          'quantity cannot be compared with >=',
+          'status must be converted to float first',
+        ],
+        correctIndex: 1,
+        explanation:
+          'In pandas, combine element-wise boolean masks using `&` (AND), `|` (OR), and `~` (NOT), wrapping each comparison in parentheses.',
+      },
+      {
+        id: 'qpy-3',
+        topicTag: 'DataFrame Joins',
+        prompt:
+          'Before running `orders.merge(products, on="product_id", how="inner")`, what key check prevents silent row multiplication (join fan-out)?',
+        options: [
+          'Confirm products["product_id"].nunique() == len(products)',
+          'Sort orders alphabetically first',
+          'Drop all numeric columns from orders',
+          'Use how="outer" on every merge',
+        ],
+        correctIndex: 0,
+        explanation:
+          'Verifying that the dimension table key has zero duplicates ensures a clean many-to-one merge without duplicating order rows.',
+      },
+      {
+        id: 'qpy-4',
+        topicTag: 'Missing Values',
+        prompt:
+          'In operations_shipments, 2 "In Transit" rows have missing `delivery_days`. What happens if you call `df["delivery_days"].fillna(0).mean()`?',
+        options: [
+          'It accurately computes mean transit time',
+          'It injects fake 0-day deliveries and pulls the average delivery time artificially downward',
+          'fillna(0) deletes the In Transit rows',
+          'pandas skips 0 automatically inside .mean()',
+        ],
+        correctIndex: 1,
+        explanation:
+          'pandas .mean() already skips NaN values cleanly. Replacing structural NULLs with 0 fabricates instant 0-day deliveries.',
+      },
+      {
+        id: 'qpy-5',
+        topicTag: 'GroupBy Output',
+        prompt:
+          'Why do analysts commonly chain `.reset_index()` after `comp.groupby("segment")["net_rev"].sum()`?',
+        options: [
+          'To sort rows from largest to smallest automatically',
+          'To turn the grouped index back into a regular DataFrame column for easy merging and exporting',
+          'To remove negative revenue values',
+          'To convert floats into percentages',
+        ],
+        correctIndex: 1,
+        explanation:
+          'groupby() places the grouping key on the index by default; .reset_index() restores a flat tabular DataFrame with clean column names.',
+      },
+      {
+        id: 'qpy-6',
+        topicTag: 'Reconciliation',
+        prompt:
+          'Your pandas pipeline calculates $5,340 Completed Net Revenue on `retail_orders.csv`, matching your SQL query. Which edge case would cause pandas and SQL to disagree?',
+        options: [
+          'Forgetting to filter status == "Completed" in one tool (leaving Returned/Cancelled orders included)',
+          'Naming the DataFrame `orders` instead of `o`',
+          'Using float64 instead of int64 for order_id',
+          'Calling .head(5) after saving to a separate variable',
+        ],
+        correctIndex: 0,
+        explanation:
+          'Mismatched inclusion filters (such as Completed vs. Returned/Cancelled) are the #1 reason Python scripts diverge from SQL KPIs.',
+      },
+    ],
+  },
+  {
+    id: 'quiz-mod-stats',
+    moduleId: 'mod-stats',
+    title: 'Statistics & Experimentation Quiz',
+    subtitle: 'Distributions, skewness, conditional probability, confidence intervals, and causal discipline.',
+    passingPercent: 80,
+    questions: [
+      {
+        id: 'qst-1',
+        topicTag: 'Skewed Distributions',
+        prompt:
+          'In credit_card_transactions (n=16), mean spend is $613.44 while median spend is $420.00. Which summary best represents a "typical" card swipe?',
+        options: [
+          'Mean ($613.44), because extreme travel spikes define typical daily swipes',
+          'Median ($420.00) paired with IQR, because right-skewed outliers pull the mean upward',
+          'Maximum ($2,100), because it captures worst-case risk',
+          'Standard deviation ($588.74) alone',
+        ],
+        correctIndex: 1,
+        explanation:
+          'On right-skewed financial data, the median and IQR describe the typical transaction accurately without distortion from high-dollar tail events.',
+      },
+      {
+        id: 'qst-2',
+        topicTag: 'Spread & SLA Risk',
+        prompt:
+          'Carrier A and Carrier B both average 3.0 delivery days, with Carrier A std = 0.3 days and Carrier B std = 1.6 days. Which carrier poses higher SLA breach risk against a 3.5-day threshold?',
+        options: [
+          'Carrier A, because smaller std means slower trucks',
+          'Carrier B, because wide variance pushes far more shipments past the 3.5-day SLA',
+          'Both have identical breach risk because their means match',
+          'Neither can breach a 3.5-day SLA if the average is 3.0',
+        ],
+        correctIndex: 1,
+        explanation:
+          'Mean alone hides tail reliability. High standard deviation indicates volatile transit times that repeatedly break fixed SLA caps.',
+      },
+      {
+        id: 'qst-3',
+        topicTag: 'Conditional Probability',
+        prompt:
+          'Why is P(International | Flagged) = 100% NOT the same as P(Flagged | International) = 100%?',
+        options: [
+          'Both conditional probabilities are always equal by Bayes’ Theorem',
+          'The conditioning denominator swaps: all Flagged txns being international does not mean all international txns are fraudulent/flagged',
+          'Conditional probability only applies to normal distributions',
+          'International transactions have zero interchange fees',
+        ],
+        correctIndex: 1,
+        explanation:
+          'Confusing P(A|B) with P(B|A) is the prosecutor’s fallacy. In the Banking dataset, $2,230 of legitimate international Platinum travel spend was Approved.',
+      },
+      {
+        id: 'qst-4',
+        topicTag: 'Hypothesis Testing',
+        prompt:
+          'What does a p-value of 0.03 in an A/B pricing experiment actually mean?',
+        options: [
+          'There is a 97% probability that the new price will double company profit',
+          'Assuming the null hypothesis (zero true difference) is true, a difference at least this extreme would occur 3% of the time by random chance',
+          'Only 3% of customers saw the variant',
+          'The effect size is guaranteed to be practically meaningful',
+        ],
+        correctIndex: 1,
+        explanation:
+          'A p-value measures incompatibility with the null hypothesis under random sampling—never the probability the hypothesis is true or its business magnitude.',
+      },
+      {
+        id: 'qst-5',
+        topicTag: 'Practical vs Statistical',
+        prompt:
+          'With 2 million checkout sessions, a 0.05 percentage point lift hits p = 0.004, but engineering maintenance costs exceed the expected revenue gain. What should the analyst recommend?',
+        options: [
+          'Ship immediately because p < 0.05 proves high ROI',
+          'Do not ship blindly—distinguish statistical significance (tiny p-value due to huge n) from practical business significance',
+          'Run the test for 10 more minutes to lower p further',
+          'Delete 90% of rows and re-test',
+        ],
+        correctIndex: 1,
+        explanation:
+          'Massive sample sizes make tiny, economically trivial effects statistically significant. Always compare the confidence interval of dollar impact against implementation cost.',
+      },
+      {
+        id: 'qst-6',
+        topicTag: 'Correlation vs Causation',
+        prompt:
+          'In hr_employees (n=16), 5 of 6 overtime employees left vs. 0 of 10 non-overtime staff. Which statement is statistically justified without overclaiming?',
+        options: [
+          'Overtime is mathematically proven to cause 83.3% attrition at all companies',
+          'Within this small observational cohort (n=16), overtime strongly associates with attrition—worth auditing shift workload alongside confounders like role level and tenure',
+          'Non-overtime employees can never quit',
+          'Sample size does not matter when the difference is large',
+        ],
+        correctIndex: 1,
+        explanation:
+          'Small observational datasets show strong associations that prioritize operational audits, but cannot prove causation without controlling for confounders or running interventions.',
+      },
+    ],
+  },
+  {
     id: 'quiz-mod-4',
     moduleId: 'mod-4',
     title: 'Module 4 Quiz: Data Visualization, Star Schemas & DAX',

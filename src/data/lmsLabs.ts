@@ -494,6 +494,277 @@ ORDER BY department, dept_rank;`,
       },
     ],
   },
+  {
+    id: 'lab-python',
+    moduleIds: ['mod-python'],
+    title: 'Python & pandas Data Wrangling Lab',
+    domain: 'Retail Sales',
+    datasetId: 'ds-retail',
+    overview:
+      'Practice cleaning text columns, merging relational CSV tables, deriving Net Revenue/Profit metrics, and summarizing DataFrames in the Constrained Python & pandas Simulator.',
+    businessBrief:
+      'Replicate the Retail margin pipeline using pandas DataFrames instead of SQL—validating that your Python script reconciles 1:1 with commercial finance ($5,340 Completed Net Revenue). Note: Executes in the browser-local Constrained Python & pandas Simulator.',
+    supportsSqlSandbox: true,
+    supportsPythonSimulator: true,
+    defaultSqlQuery: `SELECT p.category,
+  COUNT(*) AS completed_orders,
+  ROUND(SUM(o.quantity * p.unit_price * (1 - o.discount_pct)), 2) AS net_revenue
+FROM retail_orders o
+JOIN retail_products p ON o.product_id = p.product_id
+WHERE o.status = 'Completed'
+GROUP BY p.category
+ORDER BY net_revenue DESC;`,
+    defaultPythonCode: `import pandas as pd
+
+orders = pd.read_csv('retail_orders.csv')
+products = pd.read_csv('retail_products.csv')
+customers = pd.read_csv('retail_customers.csv')
+
+merged = orders.merge(products, on='product_id', how='inner').merge(customers, on='customer_id', how='inner')
+comp = merged[merged['status'] == 'Completed'].copy()
+comp['net_rev'] = comp['quantity'] * comp['unit_price'] * (1 - comp['discount_pct'])
+comp['gross_profit'] = comp['net_rev'] - (comp['quantity'] * comp['unit_cost'])
+
+summary = comp.groupby('category').agg({'net_rev': 'sum', 'gross_profit': 'sum'}).reset_index()
+summary.sort_values('net_rev', ascending=False)`,
+    exercises: [
+      {
+        id: 'lab-py-1',
+        labId: 'lab-python',
+        order: 1,
+        kind: 'python',
+        title: 'Channel Net Revenue Aggregation (pandas groupby)',
+        prompt:
+          'Using the Python Simulator on retail_orders.csv + retail_products.csv (status == "Completed"), group Net Revenue by `channel`. What is Web’s Completed Net Revenue ($) and how many Completed orders came from Web?',
+        hint: 'Merge retail_orders and retail_products, filter status == "Completed", compute net_rev, then groupby("channel").agg({"net_rev": "sum", "order_id": "count"}).',
+        starterPython: `import pandas as pd
+orders = pd.read_csv('retail_orders.csv')
+products = pd.read_csv('retail_products.csv')
+m = orders.merge(products, on='product_id', how='inner')
+comp = m[m['status'] == 'Completed'].copy()
+comp['net_rev'] = comp['quantity'] * comp['unit_price'] * (1 - comp['discount_pct'])
+comp.groupby('channel').agg({'net_rev': 'sum', 'order_id': 'count'}).reset_index()`,
+        validationRule: {
+          expectedNumbers: [{ value: 2172, tolerance: 1 }, { value: 8 }],
+          requiredKeywordGroups: [['web']],
+          nudge: 'State Web Completed Net Revenue ($2,172) and its Completed order count (8).',
+        },
+        solutionSteps: [
+          'Merge orders with products on product_id and filter status == "Completed".',
+          'Compute net_rev = quantity * unit_price * (1 - discount_pct).',
+          'Group by channel: Web = $2,172 (8 orders), In-Store = $1,830 (4 orders), Mobile App = $1,338 (3 orders).',
+        ],
+        referenceAnswer: 'Web leads with $2,172 Net Revenue across 8 Completed orders.',
+      },
+      {
+        id: 'lab-py-2',
+        labId: 'lab-python',
+        order: 2,
+        kind: 'python',
+        title: 'Product Category Gross Profit & Margin',
+        prompt:
+          'In the same Completed Retail pipeline, which product `category` generates the highest Gross Profit ($), and what is its Gross Profit ($)?',
+        hint: 'Check the default Python script output or group gross_profit by category.',
+        starterPython: `import pandas as pd
+orders = pd.read_csv('retail_orders.csv')
+products = pd.read_csv('retail_products.csv')
+m = orders.merge(products, on='product_id', how='inner')
+comp = m[m['status'] == 'Completed'].copy()
+comp['net_rev'] = comp['quantity'] * comp['unit_price'] * (1 - comp['discount_pct'])
+comp['gross_profit'] = comp['net_rev'] - (comp['quantity'] * comp['unit_cost'])
+comp.groupby('category')['gross_profit'].sum().reset_index().sort_values('gross_profit', ascending=False)`,
+        validationRule: {
+          expectedNumbers: [{ value: 900, tolerance: 1 }],
+          requiredKeywordGroups: [['hardware']],
+          nudge: 'Identify the top category by Gross Profit ("Hardware") and its Gross Profit ($900).',
+        },
+        solutionSteps: [
+          'Hardware: $2,330 net_rev, $900 gross_profit.',
+          'Accessories: $1,728 net_rev, $864 gross_profit.',
+          'Audio: $1,152 net_rev, $448 gross_profit; Workspace: $130 net_rev, $70 gross_profit.',
+        ],
+        referenceAnswer: 'Hardware leads with $900 Gross Profit ($2,330 Net Revenue).',
+      },
+      {
+        id: 'lab-py-3',
+        labId: 'lab-python',
+        order: 3,
+        kind: 'python',
+        title: 'Cross-Dataset Cleaning: Carrier Normalization',
+        prompt:
+          'Using pandas in the simulator on `operations_shipments.csv`, normalize `carrier` with `.str.strip().str.lower()` on completed rows (`delivery_days.notna()`). How many completed rows belong to `apexfreight` and what is its total freight_cost ($)?',
+        hint: 'Filter df[df["delivery_days"].notna()], create carrier_clean = df["carrier"].str.strip().str.lower(), then groupby("carrier_clean").',
+        starterPython: `import pandas as pd
+df = pd.read_csv('operations_shipments.csv')
+comp = df[df['delivery_days'].notna()].copy()
+comp['carrier_clean'] = comp['carrier'].str.strip().str.lower()
+comp.groupby('carrier_clean').agg({'shipment_id': 'count', 'freight_cost': 'sum'}).reset_index()`,
+        validationRule: {
+          expectedNumbers: [{ value: 8 }, { value: 3755, tolerance: 1 }],
+          requiredKeywordGroups: [['apexfreight']],
+          nudge: 'Normalize carrier with .str.strip().str.lower() on non-null delivery_days rows and report apexfreight count (8) and freight_cost ($3,755).',
+        },
+        solutionSteps: [
+          'Exclude 2 In Transit rows leaving 18 completed shipments.',
+          'Normalize "ApexFreight" + "apexfreight" -> apexfreight: 8 shipments, $3,755 freight_cost.',
+        ],
+        referenceAnswer: 'apexfreight has 8 completed shipments totaling $3,755 freight_cost.',
+      },
+      {
+        id: 'lab-py-4',
+        labId: 'lab-python',
+        order: 4,
+        kind: 'python',
+        title: 'Percentile Outlier Check with NumPy',
+        prompt:
+          'Load `operations_shipments.csv` in the Python simulator and run `np.percentile(df["freight_cost"], 75)`. What is the 75th percentile freight cost ($)?',
+        hint: 'Call np.percentile(df["freight_cost"], 75) on all 20 shipment rows.',
+        starterPython: `import pandas as pd
+import numpy as np
+df = pd.read_csv('operations_shipments.csv')
+print(np.percentile(df['freight_cost'], 75))`,
+        validationRule: {
+          expectedNumbers: [{ value: 517.5, tolerance: 0.5 }],
+          nudge: 'Run np.percentile(df["freight_cost"], 75) in the Python simulator (expected ~517.5).',
+        },
+        solutionSteps: [
+          'Sorted 20 freight costs place the 75th percentile (linear interpolation) at $517.50.',
+        ],
+        referenceAnswer: '$517.50 (75% of shipments cost <= $517.50).',
+      },
+    ],
+  },
+  {
+    id: 'lab-statistics',
+    moduleIds: ['mod-stats'],
+    title: 'Statistics, Skewness & Uncertainty Lab',
+    domain: 'Banking & Credit Cards',
+    datasetId: 'ds-banking',
+    overview:
+      'Analyze skewed card spend distributions, calculate mean vs. median gaps, verify sample variability, and frame justified vs. non-causal business conclusions.',
+    businessBrief:
+      'Risk and Product teams need statistically grounded benchmarks on transaction size and utilization before setting velocity thresholds. Practice separating small-sample signals from causal overclaims.',
+    supportsSqlSandbox: true,
+    supportsPythonSimulator: true,
+    defaultSqlQuery: `SELECT status,
+  COUNT(*) AS txn_count,
+  ROUND(AVG(amount), 2) AS mean_amount,
+  MIN(amount) AS min_amount,
+  MAX(amount) AS max_amount
+FROM credit_card_transactions
+GROUP BY status
+ORDER BY mean_amount DESC;`,
+    defaultPythonCode: `import pandas as pd
+import numpy as np
+
+txns = pd.read_csv('credit_card_transactions.csv')
+print("All transactions mean:", np.mean(txns['amount']))
+print("All transactions median:", np.median(txns['amount']))
+txns['amount'].describe()`,
+    exercises: [
+      {
+        id: 'lab-st-1',
+        labId: 'lab-statistics',
+        order: 1,
+        kind: 'statistics',
+        title: 'Mean vs. Median Skewness Check',
+        prompt:
+          'Using the Python Simulator on `credit_card_transactions.csv`, compute the mean ($) and median ($) of `amount` across all 16 transactions. Explain in 1 short sentence why they differ.',
+        hint: 'Use np.mean(txns["amount"]) and np.median(txns["amount"]) or txns["amount"].describe().',
+        starterPython: `import pandas as pd
+import numpy as np
+txns = pd.read_csv('credit_card_transactions.csv')
+print(np.mean(txns['amount']))
+print(np.median(txns['amount']))`,
+        validationRule: {
+          expectedNumbers: [
+            { value: 613.44, tolerance: 0.5 },
+            { value: 420, tolerance: 1 },
+          ],
+          requiredKeywordGroups: [['skew', 'outlier', 'high', 'travel', 'tail', 'right']],
+          nudge: 'Include both mean ($613.44) and median ($420) plus why high outliers pull the mean up (right skew).',
+        },
+        solutionSteps: [
+          'Mean = $9,815 / 16 = $613.44.',
+          'Median = average of 8th ($320) and 9th ($520) sorted values = $420.00.',
+          'Right-skewed high travel/electronics values ($1,250, $1,420, $2,100) pull the mean 46% above the median.',
+        ],
+        referenceAnswer: 'Mean = $613.44, Median = $420.00; high-value travel/electronics outliers create strong right skew.',
+      },
+      {
+        id: 'lab-st-2',
+        labId: 'lab-statistics',
+        order: 2,
+        kind: 'statistics',
+        title: 'Approved Spend Typical vs. Mean Benchmark',
+        prompt:
+          'Filter `credit_card_transactions.csv` to `status == "Approved"` (12 rows). What are the Approved mean ($) and median ($) transaction amounts?',
+        hint: 'Filter app = txns[txns["status"] == "Approved"] and run np.mean(app["amount"]) and np.median(app["amount"]).',
+        starterPython: `import pandas as pd
+import numpy as np
+txns = pd.read_csv('credit_card_transactions.csv')
+app = txns[txns['status'] == 'Approved']
+print(np.mean(app['amount']))
+print(np.median(app['amount']))`,
+        validationRule: {
+          expectedNumbers: [
+            { value: 388.75, tolerance: 0.5 },
+            { value: 195, tolerance: 1 },
+          ],
+          nudge: 'Filter to status == "Approved" and report both mean ($388.75) and median ($195).',
+        },
+        solutionSteps: [
+          'Approved spend = $4,665 across 12 transactions -> Mean = $388.75.',
+          'Middle two sorted Approved values ($180 and $210) average to Median = $195.00.',
+        ],
+        referenceAnswer: 'Approved Mean = $388.75; Approved Median = $195.00.',
+      },
+      {
+        id: 'lab-st-3',
+        labId: 'lab-statistics',
+        order: 3,
+        kind: 'statistics',
+        title: 'IQR vs. Mean ± SD on Skewed Data',
+        prompt:
+          'Inspect `txns["amount"].describe()` in the simulator. What is the Interquartile Range (IQR = 75% minus 25%) for all 16 transaction amounts ($)?',
+        hint: 'Run txns["amount"].describe() and subtract the 25% quartile ($167.50) from the 75% quartile ($912.50).',
+        starterPython: `import pandas as pd
+txns = pd.read_csv('credit_card_transactions.csv')
+txns['amount'].describe()`,
+        validationRule: {
+          expectedNumbers: [{ value: 745, tolerance: 1 }],
+          nudge: 'Compute Q3 (912.5) minus Q1 (167.5) from txns["amount"].describe().',
+        },
+        solutionSteps: [
+          'Q3 (75%) = $912.50, Q1 (25%) = $167.50.',
+          'IQR = $912.50 - $167.50 = $745.00.',
+        ],
+        referenceAnswer: '$745.00 IQR ($912.50 Q3 minus $167.50 Q1).',
+      },
+      {
+        id: 'lab-st-4',
+        labId: 'lab-statistics',
+        order: 4,
+        kind: 'statistics',
+        title: 'Observational Caution & Causal Framing',
+        prompt:
+          'In `credit_card_transactions`, 100% of Flagged rows (2 of 2) have `is_international = 1`. Why would it be statistically flawed to claim "being international causes fraud" and block all cross-border card swipes?',
+        hint: 'Reference small sample size (n=2 flagged), legitimate Approved international spend ($2,230), and confounding/false-positive risk.',
+        validationRule: {
+          requiredKeywordGroups: [
+            ['small', 'sample', 'only 2', 'n=2', 'n = 2'],
+            ['approved', 'false positive', 'legitimate', 'confound', 'caus'],
+          ],
+          nudge: 'Address both the tiny observational sample (n=2 flagged) and false-positive/confounding impact on legitimate Approved international transactions.',
+        },
+        solutionSteps: [
+          'Only 2 transactions were Flagged (tiny observational sample, not a causal proof).',
+          '2 legitimate Platinum Travel transactions ($1,250 + $980 = $2,230) were Approved internationally; blanket blocking harms high-value customers.',
+        ],
+        referenceAnswer: 'Observational correlation on n=2 flagged rows does not prove causation; blocking all international swipes creates costly false positives against $2,230 in legitimate Platinum travel spend.',
+      },
+    ],
+  },
 ];
 
 export function getLabById(id: string): LmsLab | undefined {

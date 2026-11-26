@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
+import { CareerReadinessView } from './components/CareerReadinessView';
 import { DashboardHome } from './components/DashboardHome';
 import { Footer } from './components/Footer';
 import { LabView } from './components/LabView';
 import { LessonView } from './components/LessonView';
 import { ModuleView } from './components/ModuleView';
 import { PersonalSettingsModal } from './components/PersonalSettingsModal';
+import { PortfolioView } from './components/PortfolioView';
 import { ProgressLedgerView } from './components/ProgressLedgerView';
 import { QuizView } from './components/QuizView';
+import { TimedPracticeView } from './components/TimedPracticeView';
 import { TopNav } from './components/TopNav';
 import { useLmsState } from './hooks/useLocalStorageState';
 import { AppRoute, parseHashRoute } from './utils/hashRouter';
@@ -20,6 +23,21 @@ export function App() {
     checkExerciseAnswer,
     updateLabNote,
     submitQuizAttempt,
+    saveOpenEndedDraft,
+    submitOpenEndedResponse,
+    toggleOpenEndedRubric,
+    resetOpenEndedTask,
+    recordTimedAttempt,
+    upsertPortfolioProject,
+    deletePortfolioProject,
+    saveBehavioralAnswer,
+    deleteBehavioralAnswer,
+    updateResumeWorksheet,
+    toggleCareerChecklistItem,
+    saveJdGapAnalysis,
+    deleteJdGapAnalysis,
+    upsertJobApplication,
+    deleteJobApplication,
     updateSettings,
     importJsonBackup,
     resetProgressOnly,
@@ -56,6 +74,12 @@ export function App() {
           <ModuleView
             state={state}
             onToggleLessonComplete={toggleLessonComplete}
+            onSaveOpenEndedDraft={saveOpenEndedDraft}
+            onSubmitOpenEndedResponse={submitOpenEndedResponse}
+            onToggleOpenEndedRubric={toggleOpenEndedRubric}
+            onResetOpenEndedTask={resetOpenEndedTask}
+            onSaveBehavioralAnswer={saveBehavioralAnswer}
+            onDeleteBehavioralAnswer={deleteBehavioralAnswer}
           />
         )}
 
@@ -64,6 +88,12 @@ export function App() {
             moduleId={route.moduleId}
             state={state}
             onToggleLessonComplete={toggleLessonComplete}
+            onSaveOpenEndedDraft={saveOpenEndedDraft}
+            onSubmitOpenEndedResponse={submitOpenEndedResponse}
+            onToggleOpenEndedRubric={toggleOpenEndedRubric}
+            onResetOpenEndedTask={resetOpenEndedTask}
+            onSaveBehavioralAnswer={saveBehavioralAnswer}
+            onDeleteBehavioralAnswer={deleteBehavioralAnswer}
           />
         )}
 
@@ -83,6 +113,39 @@ export function App() {
             onUpdateAnswer={updateExerciseAnswer}
             onCheckAnswer={checkExerciseAnswer}
             onUpdateLabNote={updateLabNote}
+            onSaveOpenEndedDraft={saveOpenEndedDraft}
+            onSubmitOpenEndedResponse={submitOpenEndedResponse}
+            onToggleOpenEndedRubric={toggleOpenEndedRubric}
+            onResetOpenEndedTask={resetOpenEndedTask}
+          />
+        )}
+
+        {route.section === 'timed-practice' && (
+          <TimedPracticeView
+            challengeId={route.challengeId}
+            state={state}
+            onRecordAttempt={recordTimedAttempt}
+          />
+        )}
+
+        {route.section === 'portfolio' && (
+          <PortfolioView
+            projectId={route.projectId}
+            state={state}
+            onUpsertProject={upsertPortfolioProject}
+            onDeleteProject={deletePortfolioProject}
+          />
+        )}
+
+        {route.section === 'career-readiness' && (
+          <CareerReadinessView
+            state={state}
+            onUpdateResume={updateResumeWorksheet}
+            onToggleChecklist={toggleCareerChecklistItem}
+            onSaveJdGap={saveJdGapAnalysis}
+            onDeleteJdGap={deleteJdGapAnalysis}
+            onUpsertApplication={upsertJobApplication}
+            onDeleteApplication={deleteJobApplication}
           />
         )}
 

@@ -10,10 +10,21 @@ interface TopNavProps {
 
 const NAV_ITEMS: { id: NavSection; label: string; matchSections: NavSection[] }[] = [
   { id: 'dashboard', label: 'Dashboard', matchSections: ['dashboard'] },
-  { id: 'modules', label: 'Modules', matchSections: ['modules', 'module', 'lesson'] },
+  { id: 'modules', label: 'Modules', matchSections: ['modules', 'module', 'lesson', 'quiz'] },
+  { id: 'lab', label: 'Practice Labs', matchSections: ['lab', 'timed-practice'] },
+  { id: 'portfolio', label: 'Portfolio', matchSections: ['portfolio'] },
+  { id: 'career-readiness', label: 'Career', matchSections: ['career-readiness', 'progress'] },
+];
+
+const MOBILE_ITEMS: { id: NavSection; label: string; matchSections: NavSection[] }[] = [
+  { id: 'dashboard', label: 'Dashboard', matchSections: ['dashboard'] },
+  { id: 'modules', label: 'All Modules', matchSections: ['modules', 'module', 'lesson'] },
   { id: 'lab', label: 'Practice Labs', matchSections: ['lab'] },
-  { id: 'quiz', label: 'Assessments', matchSections: ['quiz'] },
-  { id: 'progress', label: 'Progress', matchSections: ['progress'] },
+  { id: 'timed-practice', label: 'Timed Coding Practice', matchSections: ['timed-practice'] },
+  { id: 'quiz', label: 'Assessments & Capstone', matchSections: ['quiz'] },
+  { id: 'portfolio', label: 'Portfolio Builder', matchSections: ['portfolio'] },
+  { id: 'career-readiness', label: 'Career & Resume Prep', matchSections: ['career-readiness'] },
+  { id: 'progress', label: 'Progress Ledger', matchSections: ['progress'] },
 ];
 
 export function TopNav({ activeSection, onOpenSettings }: TopNavProps) {
@@ -85,7 +96,7 @@ export function TopNav({ activeSection, onOpenSettings }: TopNavProps) {
           aria-label="Mobile"
           className="md:hidden border-t border-slate-200 bg-white px-4 py-3 flex flex-col gap-1"
         >
-          {NAV_ITEMS.map((item) => {
+          {MOBILE_ITEMS.map((item) => {
             const isActive = item.matchSections.includes(activeSection);
             return (
               <a

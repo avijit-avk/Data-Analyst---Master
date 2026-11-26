@@ -1,4 +1,5 @@
 import { LmsLesson, LmsModule } from '../types/academy';
+import { PYTHON_LESSONS, STATISTICS_LESSONS } from './pythonAndStatsLessons';
 
 export const LMS_MODULES: LmsModule[] = [
   {
@@ -59,15 +60,53 @@ export const LMS_MODULES: LmsModule[] = [
     quizId: 'quiz-mod-3',
   },
   {
-    id: 'mod-4',
+    id: 'mod-python',
     order: 4,
+    title: 'Python for Data Analysis',
+    subtitle: 'Data Cleaning, pandas Pipelines, Merging & Reproducible KPIs',
+    description:
+      'Build repeatable analytical scripts using Python, NumPy, and pandas: clean messy strings, handle missing values, merge relational tables without fan-out, and verify summary metrics.',
+    estimatedHours: 14,
+    iconKey: 'python',
+    prerequisites: ['Module 3: SQL for Data Analysis'],
+    objectives: [
+      'Normalize dirty text columns and handle missing values safely in Python and pandas.',
+      'Filter, derive KPI columns, and merge fact and dimension DataFrames accurately.',
+      'Compute grouped business aggregations with groupby() and vectorized NumPy stats.',
+      'Reconcile Python DataFrame totals 1:1 against SQL queries and spreadsheets.',
+    ],
+    labId: 'lab-python',
+    quizId: 'quiz-mod-python',
+  },
+  {
+    id: 'mod-stats',
+    order: 5,
+    title: 'Statistics & Experimentation for Analysts',
+    subtitle: 'Distributions, Probability, Hypothesis Testing & Causal Caution',
+    description:
+      'Apply practical statistics to business decisions: measure spread on skewed data, avoid conditional probability traps, evaluate A/B tests honestly, and separate correlation from causation.',
+    estimatedHours: 10,
+    iconKey: 'statistics',
+    prerequisites: ['Module 4: Python for Data Analysis'],
+    objectives: [
+      'Choose mean vs. median and IQR vs. standard deviation based on metric skewness.',
+      'Apply conditional probability and avoid base-rate fallacies in risk/fraud triage.',
+      'Interpret p-values, confidence intervals, and statistical vs. practical significance.',
+      'Distinguish justified descriptive findings from unsupported causal claims.',
+    ],
+    labId: 'lab-statistics',
+    quizId: 'quiz-mod-stats',
+  },
+  {
+    id: 'mod-4',
+    order: 6,
     title: 'Data Visualization & BI Storytelling',
     subtitle: 'Chart Selection, Dashboard Design, Star Schemas & DAX',
     description:
       'Design executive-grade dashboards backed by clean star-schema models, clear chart selection rules, and accurate DAX evaluation context.',
     estimatedHours: 10,
     iconKey: 'powerbi',
-    prerequisites: ['Module 3: SQL for Data Analysis'],
+    prerequisites: ['Modules 1–5 Completed'],
     objectives: [
       'Match analytical intent (trend, comparison, part-to-whole, distribution) to the right visual.',
       'Structure star schemas with one-to-many single-direction filters from dimensions to facts.',
@@ -79,14 +118,14 @@ export const LMS_MODULES: LmsModule[] = [
   },
   {
     id: 'mod-5',
-    order: 5,
+    order: 7,
     title: 'Applied Business Case Studies & Capstone Projects',
     subtitle: 'Retail, Operations, Banking & HR End-to-End Cases',
     description:
-      'Apply Excel, SQL, and BI reasoning across four realistic company datasets—diagnosing retail margins, carrier SLA delays, credit card risk, and employee attrition.',
+      'Apply Excel, SQL, Python, Statistics, and BI reasoning across four realistic company datasets—diagnosing retail margins, carrier SLA delays, credit card risk, and employee attrition.',
     estimatedHours: 12,
     iconKey: 'projects',
-    prerequisites: ['Modules 1–4 Completed'],
+    prerequisites: ['Modules 1–6 Completed'],
     objectives: [
       'Execute cross-table profit and discount-erosion audits in omnichannel retail.',
       'Pinpoint freight cost drivers and SLA breaches by carrier and regional hub.',
@@ -98,19 +137,19 @@ export const LMS_MODULES: LmsModule[] = [
   },
   {
     id: 'mod-6',
-    order: 6,
+    order: 8,
     title: 'Interview Prep & Scenario-Based Mock Tests',
-    subtitle: 'SQL Debugging, Metric Investigations & Stakeholder Pushback',
+    subtitle: 'SQL Debugging, Metric Investigations & Behavioral STAR Studio',
     description:
-      'Rehearse the exact technical and business-case prompts tested in Data Analyst hiring loops, plus complete your Final Job-Readiness Capstone Assessment.',
-    estimatedHours: 8,
+      'Rehearse the technical, business-case, and behavioral prompts tested in Data Analyst hiring loops, plus complete your Final Job-Readiness Capstone Assessment.',
+    estimatedHours: 10,
     iconKey: 'interview',
-    prerequisites: ['Modules 1–5 Completed'],
+    prerequisites: ['Modules 1–7 Completed'],
     objectives: [
       'Spot subtle SQL bugs involving NULLs, LEFT JOIN filters in WHERE, and integer division.',
       'Walk interviewers through structured root-cause trees when a core KPI drops unexpectedly.',
       'Estimate funnel conversions and size business opportunities cleanly under time pressure.',
-      'Deliver crisp STAR behavioral narratives and handle executive scope pushback.',
+      'Deliver crisp, honest STAR/CAR behavioral narratives without fabricating experience.',
     ],
     labId: 'lab-hr',
     quizId: 'quiz-mod-6',
@@ -118,6 +157,8 @@ export const LMS_MODULES: LmsModule[] = [
 ];
 
 export const LMS_LESSONS: LmsLesson[] = [
+  ...PYTHON_LESSONS,
+  ...STATISTICS_LESSONS,
   // ============================================================
   // MODULE 1: DATA ANALYTICS FOUNDATIONS & BUSINESS THINKING
   // ============================================================

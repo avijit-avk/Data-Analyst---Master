@@ -68,7 +68,8 @@ export function PersonalSettingsModal({
     URL.revokeObjectURL(url);
     setBackupNotice({
       type: 'success',
-      message: 'Exported lessons, lab checks, quiz scores, and notes to JSON.',
+      message:
+        'Exported lessons, labs, quizzes, open-ended tasks, timed drills, portfolio projects, STAR drafts, and career data to JSON.',
     });
   };
 
@@ -339,8 +340,8 @@ export function PersonalSettingsModal({
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <p className="text-xs text-slate-700">
                   {confirmReset === 'progress'
-                    ? 'Reset all completed lessons, lab checks, and quiz scores to 0?'
-                    : 'Clear all progress, notes, quiz scores, and personal settings from this browser?'}
+                    ? 'Reset all completed lessons, lab checks, quizzes, open-ended scores, timed drills, portfolio drafts, STAR drafts, and career records?'
+                    : 'Clear all LMS progress, portfolio projects, career tracker entries, and personal settings (v3 + legacy v2) from this browser?'}
                 </p>
                 <div className="flex items-center gap-2 shrink-0">
                   <button

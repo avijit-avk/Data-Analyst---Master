@@ -9,6 +9,9 @@ export type AppRoute =
   | { section: 'module'; moduleId: string }
   | { section: 'lesson'; lessonId: string }
   | { section: 'lab'; labId?: string }
+  | { section: 'timed-practice'; challengeId?: string }
+  | { section: 'portfolio'; projectId?: string }
+  | { section: 'career-readiness' }
   | { section: 'quiz'; quizId?: string }
   | { section: 'progress' };
 
@@ -54,6 +57,22 @@ export function parseHashRoute(rawHash: string): AppRoute {
     return { section: 'lab' };
   }
 
+  if (head === 'timed-practice') {
+    return id ? { section: 'timed-practice', challengeId: id } : { section: 'timed-practice' };
+  }
+
+  if (head === 'portfolio') {
+    return id ? { section: 'portfolio', projectId: id } : { section: 'portfolio' };
+  }
+
+  if (head === 'career-readiness') {
+    return { section: 'career-readiness' };
+  }
+
+  if (head === 'behavioral-prep') {
+    return { section: 'module', moduleId: 'mod-6' };
+  }
+
   if (head === 'quiz') {
     if (!id) return { section: 'quiz' };
     if (id === 'capstone') return { section: 'quiz', quizId: 'quiz-capstone' };
@@ -83,6 +102,16 @@ export function buildHashHref(route: AppRoute): string {
       return `#/lesson/${encodeURIComponent(route.lessonId)}`;
     case 'lab':
       return route.labId ? `#/lab/${encodeURIComponent(route.labId)}` : '#/lab';
+    case 'timed-practice':
+      return route.challengeId
+        ? `#/timed-practice/${encodeURIComponent(route.challengeId)}`
+        : '#/timed-practice';
+    case 'portfolio':
+      return route.projectId
+        ? `#/portfolio/${encodeURIComponent(route.projectId)}`
+        : '#/portfolio';
+    case 'career-readiness':
+      return '#/career-readiness';
     case 'quiz':
       return route.quizId ? `#/quiz/${encodeURIComponent(route.quizId)}` : '#/quiz';
     case 'progress':
@@ -100,6 +129,12 @@ export function buildSectionHashHref(section: NavSection): string {
       return '#/modules';
     case 'lab':
       return '#/lab';
+    case 'timed-practice':
+      return '#/timed-practice';
+    case 'portfolio':
+      return '#/portfolio';
+    case 'career-readiness':
+      return '#/career-readiness';
     case 'quiz':
       return '#/quiz';
     case 'progress':

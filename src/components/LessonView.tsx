@@ -6,8 +6,14 @@ import {
   CheckCircle2,
   Clock,
   FlaskConical,
+  HelpCircle,
+  Lightbulb,
   NotebookPen,
+  Play,
+  Terminal,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { EMBEDDED_DATASETS } from '../data/embeddedDatasets';
 import {
   getLessonById,
   getLessonsForModule,
@@ -15,6 +21,7 @@ import {
   LMS_LESSONS,
 } from '../data/lmsCurriculum';
 import { LmsLocalState } from '../types/academy';
+import { PythonSimulationResponse, simulatePythonCode } from '../utils/pythonSimulatorEngine';
 
 interface LessonViewProps {
   lessonId: string;
@@ -30,6 +37,18 @@ export function LessonView({
   onUpdateLessonNote,
 }: LessonViewProps) {
   const lesson = getLessonById(lessonId);
+  const [showExerciseHint, setShowExerciseHint] = useState(false);
+  const [showExerciseSolution, setShowExerciseSolution] = useState(false);
+  const [simCode, setSimCode] = useState('');
+  const [simResult, setSimResult] = useState<PythonSimulationResponse | null>(null);
+
+  useEffect(() => {
+    setShowExerciseHint(false);
+    setShowExerciseSolution(false);
+    setSimCode(lesson?.guidedExercise?.starterCode ?? '');
+    setSimResult(null);
+  }, [lessonId]);
+
   if (!lesson) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-12 text-center space-y-4">
@@ -57,10 +76,15 @@ export function LessonView({
   const isCompleted = state.completedLessonIds.includes(lesson.id);
   const noteValue = state.lessonNotes[lesson.id] ?? '';
 
+  const handleRunLessonSimulator = () => {
+    const tables = EMBEDDED_DATASETS.flatMap((d) => d.tables);
+    setSimResult(simulatePythonCode(simCode, tables));
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Sidebar Lesson Stepper (Desktop) */}
+        {/* Sidebar Lesson Stepper */}
         <aside className="lg:col-span-3 lg:sticky lg:top-24 bg-white border border-slate-200 rounded-xl p-4 space-y-4">
           {mod && (
             <div className="space-y-1 pb-3 border-b border-slate-100">
@@ -172,6 +196,12 @@ export function LessonView({
                 {lesson.title}
               </h1>
               <p className="text-base text-slate-600 leading-relaxed">{lesson.summary}</p>
+              {lesson.learningObjective && (
+                <p className="text-xs sm:text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5">
+                  <span className="font-semibold text-blue-700">Learning Objective: </span>
+                  {lesson.learningObjective}
+                </p>
+              )}
             </div>
           </header>
 
@@ -242,11 +272,178 @@ export function LessonView({
               ))}
             </ol>
 
+            {lesson.workedExample.expectedOutput && (
+              <div className="bg-slate-900 text-slate-100 rounded-lg px-3.5 py-2.5 text-xs font-mono">
+                <span className="text-slate-400">Expected Output: </span>
+                {lesson.workedExample.expectedOutput}
+              </div>
+            )}
+
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3.5 text-sm text-emerald-900">
               <span className="font-semibold">Outcome: </span>
               {lesson.workedExample.outcome}
             </div>
           </section>
+
+          {/* Optional Guided Exercise & Inline Simulator */}
+          {lesson.guidedExercise && (
+            <section className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Terminal className="w-5 h-5 text-blue-600" aria-hidden="true" />
+                  <h2 className="font-display text-lg font-semibold text-slate-900">
+                    Guided Practice Check
+                  </h2>
+                </div>
+                {lesson.guidedExercise.starterCode && (
+                  <span className="text-xs text-slate-500">
+                    Constrained Python &amp; pandas Simulator
+                  </span>
+                )}
+              </div>
+
+              <p className="text-sm text-slate-700 leading-relaxed">
+                {lesson.guidedExercise.prompt}
+              </p>
+
+              {lesson.guidedExercise.starterCode && (
+                <div className="border border-slate-200 rounded-xl overflow-hidden">
+                  <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-slate-700">
+                      Try in Constrained Python &amp; pandas Simulator
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleRunLessonSimulator}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
+                    >
+                      <Play className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>Run Simulator</span>
+                    </button>
+                  </div>
+                  <div className="p-3.5 bg-slate-950">
+                    <textarea
+                      rows={6}
+                      value={simCode}
+                      onChange={(e) => setSimCode(e.target.value)}
+                      spellCheck={false}
+                      aria-label="Lesson Python simulator editor"
+                      className="w-full bg-transparent text-slate-100 font-mono text-xs leading-relaxed focus:outline-none resize-y"
+                    />
+                  </div>
+
+                  {simResult && (
+                    <div className="p-3.5 border-t border-slate-200 bg-slate-50 text-xs space-y-2">
+                      {!simResult.ok ? (
+                        <p className="font-mono text-red-700">{simResult.error}</p>
+                      ) : (
+                        <>
+                          {simResult.outputLines.length > 0 && (
+                            <pre className="font-mono bg-slate-900 text-slate-100 rounded-lg p-3 overflow-x-auto">
+                              {simResult.outputLines.join('\n')}
+                            </pre>
+                          )}
+                          {simResult.resultTable && simResult.resultTable.rows.length > 0 && (
+                            <div className="overflow-x-auto max-h-56 bg-white border border-slate-200 rounded-lg">
+                              <table className="w-full text-left border-collapse text-xs">
+                                <thead className="bg-slate-50 border-b border-slate-200">
+                                  <tr>
+                                    {simResult.resultTable.columns.map((col) => (
+                                      <th key={col} className="px-3 py-2 font-mono font-semibold text-slate-700">
+                                        {col}
+                                      </th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 tabular-nums">
+                                  {simResult.resultTable.rows.slice(0, 12).map((row, idx) => (
+                                    <tr key={idx}>
+                                      {simResult.resultTable!.columns.map((col) => (
+                                        <td key={col} className="px-3 py-1.5 text-slate-700 whitespace-nowrap">
+                                          {row[col] === null ? 'NULL' : String(row[col])}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowExerciseHint((h) => !h)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg cursor-pointer"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>{showExerciseHint ? 'Hide Hint' : 'Hint'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowExerciseSolution((s) => !s)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg cursor-pointer"
+                >
+                  <Lightbulb className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>{showExerciseSolution ? 'Hide Solution' : 'Reveal Solution'}</span>
+                </button>
+              </div>
+
+              {showExerciseHint && (
+                <p className="text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-lg p-3">
+                  <span className="font-semibold text-slate-900">Hint: </span>
+                  {lesson.guidedExercise.hint}
+                </p>
+              )}
+
+              {showExerciseSolution && (
+                <pre className="text-xs font-mono bg-slate-900 text-slate-100 rounded-lg p-3.5 whitespace-pre-wrap">
+                  {lesson.guidedExercise.solution}
+                </pre>
+              )}
+            </section>
+          )}
+
+          {/* Optional Statistical Framing (Module 5 Statistics) */}
+          {lesson.statisticalFraming && (
+            <section className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-4">
+              <h2 className="font-display text-lg font-semibold text-slate-900">
+                Statistical Scope, Assumptions &amp; Causal Discipline
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-1.5">
+                  <p className="font-semibold text-slate-900">Assumptions</p>
+                  <ul className="list-disc list-inside text-slate-700 space-y-1">
+                    {lesson.statisticalFraming.assumptions.map((a, i) => (
+                      <li key={i}>{a}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-1.5">
+                  <p className="font-semibold text-slate-900">Business Decision</p>
+                  <p className="text-slate-700 leading-relaxed">{lesson.statisticalFraming.decision}</p>
+                </div>
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-1">
+                  <p className="font-semibold text-emerald-900">Justified From Data</p>
+                  <p className="text-emerald-900/90 leading-relaxed">
+                    {lesson.statisticalFraming.justified}
+                  </p>
+                </div>
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-1">
+                  <p className="font-semibold text-amber-900">NOT Justified (Avoid Overclaiming)</p>
+                  <p className="text-amber-900/90 leading-relaxed">
+                    {lesson.statisticalFraming.notJustified}
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* 4. Common Pitfalls */}
           <section className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-4">
@@ -273,6 +470,18 @@ export function LessonView({
               ))}
             </div>
           </section>
+
+          {/* Business Interpretation */}
+          {lesson.businessInterpretation && (
+            <section className="bg-white border border-slate-200 rounded-2xl p-6 space-y-2">
+              <h2 className="font-display text-base font-semibold text-slate-900">
+                Business Interpretation
+              </h2>
+              <p className="text-sm text-slate-700 leading-relaxed">
+                {lesson.businessInterpretation}
+              </p>
+            </section>
+          )}
 
           {/* 5. Summary Cheat Sheet */}
           <section className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-3">
