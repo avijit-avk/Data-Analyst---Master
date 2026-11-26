@@ -1,11 +1,11 @@
 import { Download, RotateCcw, Upload, X } from 'lucide-react';
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
-import { AcademyLocalState, PersonalSettings } from '../types/academy';
+import { LmsLocalState, PersonalSettings } from '../types/academy';
 
 interface PersonalSettingsModalProps {
   isOpen: boolean;
   settings: PersonalSettings;
-  fullState: AcademyLocalState;
+  fullState: LmsLocalState;
   onClose: () => void;
   onUpdateSettings: (patch: Partial<PersonalSettings>) => void;
   onImportJson: (rawJson: string) => { ok: true } | { ok: false; error: string };
@@ -61,14 +61,14 @@ export function PersonalSettingsModal({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'data-analytics-masters-personal.json';
+    link.download = 'data-analytics-masters-lms-backup.json';
     document.body.appendChild(link);
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
     setBackupNotice({
       type: 'success',
-      message: 'Exported local settings, progress, and personal links to JSON.',
+      message: 'Exported lessons, lab checks, quiz scores, and notes to JSON.',
     });
   };
 
@@ -83,7 +83,7 @@ export function PersonalSettingsModal({
       if (result.ok) {
         setBackupNotice({
           type: 'success',
-          message: 'Backup restored to browser local storage.',
+          message: 'LMS progress backup restored to browser local storage.',
         });
       } else {
         setBackupNotice({
@@ -110,7 +110,6 @@ export function PersonalSettingsModal({
       }}
     >
       <div className="w-full max-w-lg bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden max-h-[90vh] flex flex-col">
-        {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between gap-4">
           <div>
             <h2
@@ -120,20 +119,19 @@ export function PersonalSettingsModal({
               Personal Settings
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Stored strictly in your browser&apos;s local storage. No cloud account required.
+              Saved strictly in browser local storage. Zero external accounts required.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close settings"
-            className="w-9 h-9 rounded-lg inline-flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="w-10 h-10 rounded-lg inline-flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
-        {/* Form Body */}
         <div className="px-6 py-5 overflow-y-auto space-y-5">
           <div>
             <label
@@ -173,7 +171,7 @@ export function PersonalSettingsModal({
                   key={role}
                   type="button"
                   onClick={() => onUpdateSettings({ targetRole: role })}
-                  className={`px-2.5 py-1 text-xs rounded-md border transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1.5 text-xs rounded-md border transition-colors cursor-pointer ${
                     settings.targetRole === role
                       ? 'bg-slate-900 text-white border-slate-900'
                       : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
@@ -248,10 +246,10 @@ export function PersonalSettingsModal({
           <div className="flex items-center justify-between gap-4 py-3 border-y border-slate-100">
             <div>
               <span className="block text-sm font-medium text-slate-800">
-                Show Outline Topics on Cards
+                Show Objectives Preview on Cards
               </span>
               <span className="block text-xs text-slate-500">
-                Display key module keywords beneath each course description.
+                Display lesson previews beneath each module description on the roadmap.
               </span>
             </div>
             <button
@@ -274,10 +272,9 @@ export function PersonalSettingsModal({
             </button>
           </div>
 
-          {/* Local Storage Backup & Reset */}
           <div className="space-y-3">
             <span className="block text-sm font-medium text-slate-800">
-              Local Data Management
+              Local Data Backup & Reset
             </span>
 
             <input
@@ -342,8 +339,8 @@ export function PersonalSettingsModal({
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <p className="text-xs text-slate-700">
                   {confirmReset === 'progress'
-                    ? 'Reset all course modules, practice labs, and interview checklists to 0?'
-                    : 'Clear all progress, notes, personal links, and settings from this browser?'}
+                    ? 'Reset all completed lessons, lab checks, and quiz scores to 0?'
+                    : 'Clear all progress, notes, quiz scores, and personal settings from this browser?'}
                 </p>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
@@ -373,7 +370,6 @@ export function PersonalSettingsModal({
           </div>
         </div>
 
-        {/* Footer */}
         <div className="px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex justify-end">
           <button
             type="button"

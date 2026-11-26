@@ -1,16 +1,20 @@
-import { COURSES, PRACTICE_LAB_PREVIEWS } from '../data/curriculum';
+import { getLessonById, getModuleById } from '../data/lmsCurriculum';
+import { getLabById, getLabForModule } from '../data/lmsLabs';
+import { getQuizById, getQuizForModule } from '../data/lmsQuizzes';
 import { NavSection } from '../types/academy';
 
 export type AppRoute =
   | { section: 'dashboard' }
-  | { section: 'courses'; courseId?: string; moduleId?: string }
-  | { section: 'practice-lab'; labId?: string; moduleId?: string }
-  | { section: 'interview-prep' }
+  | { section: 'modules' }
+  | { section: 'module'; moduleId: string }
+  | { section: 'lesson'; lessonId: string }
+  | { section: 'lab'; labId?: string }
+  | { section: 'quiz'; quizId?: string }
   | { section: 'progress' };
 
 export function parseHashRoute(rawHash: string): AppRoute {
   const cleaned = rawHash.replace(/^#/, '').replace(/^\/+|\/+$/g, '');
-  if (!cleaned) {
+  if (!cleaned || cleaned === 'dashboard') {
     return { section: 'dashboard' };
   }
 
@@ -23,57 +27,41 @@ export function parseHashRoute(rawHash: string): AppRoute {
   });
 
   const head = segments[0];
+  const id = segments[1];
 
-  if (head === 'dashboard') {
-    return { section: 'dashboard' };
+  if (head === 'modules') {
+    return { section: 'modules' };
   }
 
-  if (head === 'courses') {
-    const courseSlug = segments[1];
-    if (!courseSlug) {
-      return { section: 'courses' };
-    }
-    const course = COURSES.find((c) => c.id === courseSlug);
-    if (!course) {
-      return { section: 'courses' };
-    }
-    const moduleSlug = segments[2];
-    const matchedModule = moduleSlug
-      ? course.modules.find((m) => m.id === moduleSlug)
-      : undefined;
-
-    return {
-      section: 'courses',
-      courseId: course.id,
-      moduleId: matchedModule?.id,
-    };
+  if (head === 'module') {
+    if (!id) return { section: 'modules' };
+    const mod = getModuleById(id);
+    return mod ? { section: 'module', moduleId: mod.id } : { section: 'modules' };
   }
 
-  if (head === 'practice-lab') {
-    const labSlug = segments[1];
-    if (!labSlug) {
-      return { section: 'practice-lab' };
-    }
-    const lab = PRACTICE_LAB_PREVIEWS.find(
-      (l) => l.id === labSlug || l.courseId === labSlug
-    );
-    if (!lab) {
-      return { section: 'practice-lab' };
-    }
-    const moduleSlug = segments[2];
-    const matchedTopic = moduleSlug
-      ? lab.topics.find((t) => t.moduleId === moduleSlug)
-      : undefined;
-
-    return {
-      section: 'practice-lab',
-      labId: lab.id,
-      moduleId: matchedTopic?.moduleId,
-    };
+  if (head === 'lesson') {
+    if (!id) return { section: 'modules' };
+    const lesson = getLessonById(id);
+    return lesson ? { section: 'lesson', lessonId: lesson.id } : { section: 'modules' };
   }
 
-  if (head === 'interview-prep') {
-    return { section: 'interview-prep' };
+  if (head === 'lab') {
+    if (!id) return { section: 'lab' };
+    const direct = getLabById(id);
+    if (direct) return { section: 'lab', labId: direct.id };
+    const byModule = getLabForModule(id);
+    if (byModule) return { section: 'lab', labId: byModule.id };
+    return { section: 'lab' };
+  }
+
+  if (head === 'quiz') {
+    if (!id) return { section: 'quiz' };
+    if (id === 'capstone') return { section: 'quiz', quizId: 'quiz-capstone' };
+    const direct = getQuizById(id);
+    if (direct) return { section: 'quiz', quizId: direct.id };
+    const byModule = getQuizForModule(id);
+    if (byModule) return { section: 'quiz', quizId: byModule.id };
+    return { section: 'quiz' };
   }
 
   if (head === 'progress') {
@@ -86,32 +74,37 @@ export function parseHashRoute(rawHash: string): AppRoute {
 export function buildHashHref(route: AppRoute): string {
   switch (route.section) {
     case 'dashboard':
-      return '#/';
-    case 'courses': {
-      if (!route.courseId) return '#/courses';
-      if (!route.moduleId) return `#/courses/${encodeURIComponent(route.courseId)}`;
-      return `#/courses/${encodeURIComponent(route.courseId)}/${encodeURIComponent(
-        route.moduleId
-      )}`;
-    }
-    case 'practice-lab': {
-      if (!route.labId) return '#/practice-lab';
-      if (!route.moduleId) {
-        return `#/practice-lab/${encodeURIComponent(route.labId)}`;
-      }
-      return `#/practice-lab/${encodeURIComponent(
-        route.labId
-      )}/${encodeURIComponent(route.moduleId)}`;
-    }
-    case 'interview-prep':
-      return '#/interview-prep';
+      return '#/dashboard';
+    case 'modules':
+      return '#/modules';
+    case 'module':
+      return `#/module/${encodeURIComponent(route.moduleId)}`;
+    case 'lesson':
+      return `#/lesson/${encodeURIComponent(route.lessonId)}`;
+    case 'lab':
+      return route.labId ? `#/lab/${encodeURIComponent(route.labId)}` : '#/lab';
+    case 'quiz':
+      return route.quizId ? `#/quiz/${encodeURIComponent(route.quizId)}` : '#/quiz';
     case 'progress':
       return '#/progress';
   }
 }
 
 export function buildSectionHashHref(section: NavSection): string {
-  return buildHashHref({ section });
+  switch (section) {
+    case 'dashboard':
+      return '#/dashboard';
+    case 'modules':
+    case 'module':
+    case 'lesson':
+      return '#/modules';
+    case 'lab':
+      return '#/lab';
+    case 'quiz':
+      return '#/quiz';
+    case 'progress':
+      return '#/progress';
+  }
 }
 
 export function navigateToHash(route: AppRoute): void {
@@ -120,10 +113,4 @@ export function navigateToHash(route: AppRoute): void {
   if (window.location.hash !== targetHash) {
     window.location.hash = targetHash;
   }
-}
-
-export function buildShareableUrl(route: AppRoute): string {
-  const hash = buildHashHref(route);
-  if (typeof window === 'undefined') return hash;
-  return `${window.location.origin}${window.location.pathname}${hash}`;
 }

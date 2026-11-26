@@ -1,215 +1,198 @@
-export type NavSection =
-  | 'dashboard'
-  | 'courses'
-  | 'practice-lab'
-  | 'interview-prep'
-  | 'progress';
-
-export type CourseCategory =
-  | 'Core Tools'
-  | 'Quantitative & BI'
-  | 'Applied & Career';
-
-export type CourseStatus = 'not_started' | 'in_progress' | 'completed';
-
-export type CourseIconKey =
+export type ModuleIconKey =
+  | 'business'
   | 'excel'
   | 'sql'
-  | 'python'
-  | 'statistics'
   | 'powerbi'
-  | 'business'
   | 'projects'
   | 'interview';
 
-export type CuratedResourceFormat =
-  | 'Official Docs / Guide'
-  | 'Video Tutorial'
-  | 'Interactive / Practice';
+export type NavSection =
+  | 'dashboard'
+  | 'modules'
+  | 'module'
+  | 'lesson'
+  | 'lab'
+  | 'quiz'
+  | 'progress';
 
-export type PersonalLinkFormat =
-  | 'Video'
-  | 'NotebookLM'
-  | 'Article'
-  | 'Practice';
-
-export interface CuratedResource {
-  title: string;
-  source: string;
-  format: CuratedResourceFormat;
-  url: string;
+export interface LessonConceptBlock {
+  heading: string;
+  explanation: string;
+  keyTakeaway: string;
 }
 
-export interface CourseModule {
+export interface LessonSyntaxItem {
+  label: string;
+  syntax: string;
+  usage: string;
+}
+
+export interface LessonWorkedStep {
+  stepTitle: string;
+  detail: string;
+  codeOrFormula?: string;
+}
+
+export interface LessonPitfall {
+  mistake: string;
+  whyItBreaks: string;
+  fix: string;
+}
+
+export interface LmsLesson {
   id: string;
+  moduleId: string;
+  order: number;
   title: string;
   summary: string;
-  resources: CuratedResource[];
+  durationMinutes: number;
+  coreConcepts: LessonConceptBlock[];
+  syntaxReference: LessonSyntaxItem[];
+  workedExample: {
+    scenario: string;
+    steps: LessonWorkedStep[];
+    outcome: string;
+  };
+  commonPitfalls: LessonPitfall[];
+  cheatSheet: string[];
 }
 
-export interface Course {
+export interface LmsModule {
   id: string;
-  indexLabel: string;
+  order: number;
   title: string;
-  category: CourseCategory;
-  iconKey: CourseIconKey;
-  shortDescription: string;
-  outlineTopics: string[];
+  subtitle: string;
+  description: string;
   estimatedHours: number;
-  overviewResources: CuratedResource[];
-  modules: CourseModule[];
+  iconKey: ModuleIconKey;
+  prerequisites: string[];
+  objectives: string[];
+  labId: string;
+  quizId: string;
 }
 
-export interface PersonalStudyLink {
-  id: string;
-  label: string;
-  url: string;
-  format: PersonalLinkFormat;
-  moduleIds: string[];
-  startSeconds?: number | null;
-  addedAt: string;
-}
+export type ColumnDataType = 'TEXT' | 'INT' | 'FLOAT' | 'DATE';
 
-export interface CourseProgressEntry {
-  status: CourseStatus;
-  completedModuleIds: string[];
-  notes: string;
-  bookmarked: boolean;
-  personalLinks: PersonalStudyLink[];
-  updatedAt: string | null;
-}
-
-export interface PersonalSettings {
-  learnerName: string;
-  targetRole: string;
-  weeklyHoursGoal: number | null;
-  cardDensity: 'comfortable' | 'compact';
-  showModulePreview: boolean;
-  focusCourseId: string | null;
-}
-
-export type PracticePromptKind = 'Scenario' | 'Edge Case' | 'Formula / Query';
-
-export type SampleColumnType =
-  | 'TEXT'
-  | 'INTEGER'
-  | 'DECIMAL'
-  | 'DATE'
-  | 'BOOLEAN';
-
-export interface SampleDatasetColumn {
+export interface EmbeddedColumn {
   name: string;
-  type: SampleColumnType;
+  type: ColumnDataType;
   description: string;
 }
 
-export interface SampleDatasetFile {
+export type DatasetRowValue = string | number | null;
+export type DatasetRow = Record<string, DatasetRowValue>;
+
+export interface EmbeddedTable {
+  name: string;
+  csvFilename: string;
+  columns: EmbeddedColumn[];
+  rows: DatasetRow[];
+}
+
+export type BusinessDomain =
+  | 'Operations'
+  | 'Retail Sales'
+  | 'Banking & Credit Cards'
+  | 'Human Resources';
+
+export interface EmbeddedDataset {
   id: string;
-  filename: string;
-  roleLabel: string;
+  domain: BusinessDomain;
+  title: string;
   description: string;
-  columns: SampleDatasetColumn[];
-  rows: Record<string, string | number | null>[];
+  tables: EmbeddedTable[];
 }
 
-export type PracticeCheckStatus = 'verified' | 'needs_review';
+export type PracticeCheckStatus = 'unchecked' | 'verified' | 'needs_review';
 
 export interface PracticeNumericTarget {
   value: number;
   tolerance?: number;
-  /** If true, also accept decimal/percent ratio equivalents (e.g. 41.7 and 0.417) */
   allowPercentRatio?: boolean;
 }
 
 export interface PracticeAnswerValidationRule {
   expectedNumbers?: PracticeNumericTarget[];
-  /** Each inner array represents acceptable aliases for one required keyword/token */
   requiredKeywordGroups?: string[][];
-  /** Optional normalized short-answer exact strings */
   acceptedExactValues?: string[];
   nudge: string;
-  inputPlaceholder: string;
-  inputMode?: 'line' | 'multiline';
 }
 
-export interface PracticeAnswerSubmission {
-  answerText: string;
-  status: PracticeCheckStatus | null;
-  feedback: string | null;
-  checkedAt: string | null;
-}
+export type LabExerciseKind = 'formula' | 'sql' | 'metric';
 
-export interface PracticePrompt {
+export interface LabExercise {
   id: string;
-  kind: PracticePromptKind;
+  labId: string;
+  order: number;
+  kind: LabExerciseKind;
   title: string;
   prompt: string;
-  expectedCheck: string;
+  hint: string;
+  starterSql?: string;
+  validationRule: PracticeAnswerValidationRule;
+  solutionSteps: string[];
   referenceAnswer: string;
-  validation: PracticeAnswerValidationRule;
 }
 
-export interface PracticeTopic {
-  moduleId: string;
-  indexLabel: string;
-  title: string;
-  summary: string;
-  prompts: PracticePrompt[];
-}
-
-export interface PracticeLabPreview {
+export interface LmsLab {
   id: string;
-  courseId: string;
+  moduleIds: string[];
   title: string;
-  tool: string;
-  scopeSummary: string;
-  drillTopics: string[];
-  sampleFiles: SampleDatasetFile[];
-  topics: PracticeTopic[];
+  domain: BusinessDomain;
+  datasetId: string;
+  overview: string;
+  businessBrief: string;
+  supportsSqlSandbox: boolean;
+  defaultSqlQuery: string;
+  exercises: LabExercise[];
 }
 
-export interface LearningStage {
+export interface QuizQuestion {
   id: string;
-  stageNumber: string;
+  topicTag: string;
+  prompt: string;
+  codeSnippet?: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+export interface LmsQuiz {
+  id: string;
+  moduleId?: string;
   title: string;
   subtitle: string;
-  outcome: string;
-  courseIds: string[];
+  passingPercent: number;
+  isCapstone?: boolean;
+  questions: QuizQuestion[];
 }
 
-export interface InterviewPrepTopic {
-  id: string;
-  area: string;
-  title: string;
-  description: string;
-  practiceLabId?: string;
-  practiceModuleId?: string;
-  courseId?: string;
-  courseModuleId?: string;
+export interface QuizAttemptRecord {
+  attempts: number;
+  bestScorePercent: number;
+  lastScorePercent: number;
+  passed: boolean;
+  lastAnswers: Record<string, number>;
+  lastSubmittedAt: string;
 }
 
-export interface InterviewRoundGuide {
-  id: string;
-  roundLabel: string;
-  title: string;
-  summary: string;
-  focusSkills: string[];
-  practiceLabId?: string;
-  courseId: string;
-  courseModuleId?: string;
-  freeResourceTitle: string;
-  freeResourceSource: string;
-  freeResourceUrl: string;
+export type CardDensity = 'comfortable' | 'compact';
+
+export interface PersonalSettings {
+  learnerName: string;
+  targetRole: string;
+  weeklyHoursGoal: number | null;
+  cardDensity: CardDensity;
+  showModulePreview: boolean;
 }
 
-export interface AcademyLocalState {
-  version: number;
+export interface LmsLocalState {
+  completedLessonIds: string[];
+  lessonNotes: Record<string, string>;
+  exerciseAnswers: Record<string, string>;
+  exerciseCheckStatus: Record<string, PracticeCheckStatus>;
+  exerciseFeedback: Record<string, string>;
+  labNotes: Record<string, string>;
+  quizResults: Record<string, QuizAttemptRecord>;
   settings: PersonalSettings;
-  courseProgress: Record<string, CourseProgressEntry>;
-  practicedLabIds: string[];
-  practicedPromptIds: string[];
-  practiceTopicNotes: Record<string, string>;
-  practicePromptAnswers: Record<string, PracticeAnswerSubmission>;
-  completedInterviewItemIds: string[];
-  practiceScratchpad: string;
 }
