@@ -137,6 +137,20 @@ export function PortfolioView({
         </a>
       </div>
 
+      {projectId && !state.portfolioProjects.some((p) => p.id === projectId) && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-900">
+          <span>
+            Portfolio project <code className="font-mono font-semibold">{projectId}</code> was not found in this browser’s local storage. Create a case study from a template below or open an existing saved project.
+          </span>
+          <a
+            href="#/portfolio"
+            className="font-semibold text-amber-900 underline hover:text-amber-700 shrink-0"
+          >
+            Reset Portfolio URL
+          </a>
+        </div>
+      )}
+
       {/* Template Launcher Strip */}
       <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-4">
         <div className="flex items-center justify-between gap-2">

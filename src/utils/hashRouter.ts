@@ -1,6 +1,7 @@
 import { getLessonById, getModuleById } from '../data/lmsCurriculum';
 import { getLabById, getLabForModule } from '../data/lmsLabs';
 import { getQuizById, getQuizForModule } from '../data/lmsQuizzes';
+import { getTimedChallengeById } from '../data/timedChallenges';
 import { NavSection } from '../types/academy';
 
 export type AppRoute =
@@ -13,7 +14,8 @@ export type AppRoute =
   | { section: 'portfolio'; projectId?: string }
   | { section: 'career-readiness' }
   | { section: 'quiz'; quizId?: string }
-  | { section: 'progress' };
+  | { section: 'progress' }
+  | { section: 'not-found'; rawHash: string };
 
 export function parseHashRoute(rawHash: string): AppRoute {
   const cleaned = rawHash.replace(/^#/, '').replace(/^\/+|\/+$/g, '');
@@ -31,63 +33,68 @@ export function parseHashRoute(rawHash: string): AppRoute {
 
   const head = segments[0];
   const id = segments[1];
+  const hasExtraSegments = segments.length > 2;
 
-  if (head === 'modules') {
+  if (head === 'modules' && segments.length === 1) {
     return { section: 'modules' };
   }
 
-  if (head === 'module') {
+  if (head === 'module' && !hasExtraSegments) {
     if (!id) return { section: 'modules' };
     const mod = getModuleById(id);
-    return mod ? { section: 'module', moduleId: mod.id } : { section: 'modules' };
+    return mod ? { section: 'module', moduleId: mod.id } : { section: 'not-found', rawHash };
   }
 
-  if (head === 'lesson') {
-    if (!id) return { section: 'modules' };
+  if (head === 'lesson' && !hasExtraSegments) {
+    if (!id) return { section: 'not-found', rawHash };
     const lesson = getLessonById(id);
-    return lesson ? { section: 'lesson', lessonId: lesson.id } : { section: 'modules' };
+    return lesson ? { section: 'lesson', lessonId: lesson.id } : { section: 'not-found', rawHash };
   }
 
-  if (head === 'lab') {
+  if (head === 'lab' && !hasExtraSegments) {
     if (!id) return { section: 'lab' };
     const direct = getLabById(id);
     if (direct) return { section: 'lab', labId: direct.id };
     const byModule = getLabForModule(id);
     if (byModule) return { section: 'lab', labId: byModule.id };
-    return { section: 'lab' };
+    return { section: 'not-found', rawHash };
   }
 
-  if (head === 'timed-practice') {
-    return id ? { section: 'timed-practice', challengeId: id } : { section: 'timed-practice' };
+  if (head === 'timed-practice' && !hasExtraSegments) {
+    if (!id) return { section: 'timed-practice' };
+    const challenge = getTimedChallengeById(id);
+    return challenge
+      ? { section: 'timed-practice', challengeId: challenge.id }
+      : { section: 'not-found', rawHash };
   }
 
-  if (head === 'portfolio') {
+  if (head === 'portfolio' && !hasExtraSegments) {
     return id ? { section: 'portfolio', projectId: id } : { section: 'portfolio' };
   }
 
-  if (head === 'career-readiness') {
+  if (head === 'career-readiness' && segments.length === 1) {
     return { section: 'career-readiness' };
   }
 
-  if (head === 'behavioral-prep') {
+  if (head === 'behavioral-prep' && segments.length === 1) {
     return { section: 'module', moduleId: 'mod-6' };
   }
 
-  if (head === 'quiz') {
+  if (head === 'quiz' && !hasExtraSegments) {
     if (!id) return { section: 'quiz' };
     if (id === 'capstone') return { section: 'quiz', quizId: 'quiz-capstone' };
     const direct = getQuizById(id);
     if (direct) return { section: 'quiz', quizId: direct.id };
     const byModule = getQuizForModule(id);
     if (byModule) return { section: 'quiz', quizId: byModule.id };
-    return { section: 'quiz' };
+    return { section: 'not-found', rawHash };
   }
 
-  if (head === 'progress') {
+  if (head === 'progress' && segments.length === 1) {
     return { section: 'progress' };
   }
 
-  return { section: 'dashboard' };
+  return { section: 'not-found', rawHash };
 }
 
 export function buildHashHref(route: AppRoute): string {
@@ -116,6 +123,8 @@ export function buildHashHref(route: AppRoute): string {
       return route.quizId ? `#/quiz/${encodeURIComponent(route.quizId)}` : '#/quiz';
     case 'progress':
       return '#/progress';
+    case 'not-found':
+      return '#/dashboard';
   }
 }
 
@@ -139,6 +148,8 @@ export function buildSectionHashHref(section: NavSection): string {
       return '#/quiz';
     case 'progress':
       return '#/progress';
+    case 'not-found':
+      return '#/dashboard';
   }
 }
 

@@ -18,7 +18,8 @@ export type NavSection =
   | 'portfolio'
   | 'career-readiness'
   | 'quiz'
-  | 'progress';
+  | 'progress'
+  | 'not-found';
 
 export interface LessonConceptBlock {
   heading: string;

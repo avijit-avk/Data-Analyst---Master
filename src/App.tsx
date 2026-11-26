@@ -5,6 +5,7 @@ import { Footer } from './components/Footer';
 import { LabView } from './components/LabView';
 import { LessonView } from './components/LessonView';
 import { ModuleView } from './components/ModuleView';
+import { NotFoundView } from './components/NotFoundView';
 import { PersonalSettingsModal } from './components/PersonalSettingsModal';
 import { PortfolioView } from './components/PortfolioView';
 import { ProgressLedgerView } from './components/ProgressLedgerView';
@@ -163,6 +164,8 @@ export function App() {
             onOpenSettings={() => setSettingsOpen(true)}
           />
         )}
+
+        {route.section === 'not-found' && <NotFoundView rawHash={route.rawHash} />}
       </main>
 
       <Footer />
