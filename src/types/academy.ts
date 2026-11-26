@@ -326,6 +326,7 @@ export interface PortfolioProject {
   longCaseStudy: string;
   readmeDraft: string;
   rubricSelfReview: Record<PortfolioRubricKey, boolean>;
+  learnerVerifiedOriginalWork?: boolean;
 }
 
 // ==========================================

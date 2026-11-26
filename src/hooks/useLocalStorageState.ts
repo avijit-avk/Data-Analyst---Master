@@ -128,6 +128,7 @@ function sanitizePortfolioProject(raw: unknown): PortfolioProject | null {
     longCaseStudy: asStr(p.longCaseStudy),
     readmeDraft: asStr(p.readmeDraft),
     rubricSelfReview: rubric,
+    learnerVerifiedOriginalWork: Boolean(p.learnerVerifiedOriginalWork),
   };
 }
 

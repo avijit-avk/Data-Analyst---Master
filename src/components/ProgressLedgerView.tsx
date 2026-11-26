@@ -144,10 +144,10 @@ export function ProgressLedgerView({ state, onOpenSettings }: ProgressLedgerView
               <span>Portfolio Projects</span>
             </div>
             <p className="font-display text-xl font-bold text-slate-900 tabular-nums">
-              {portfolioCompleteCount} / {portfolioCount} complete
+              {portfolioCompleteCount} job-ready / {portfolioCount} draft{portfolioCount === 1 ? '' : 's'}
             </p>
             <p className="text-xs text-slate-600">
-              Validated against all 10 portfolio quality checks and exportable as Markdown README.
+              Validated against 10 structure checks plus the 4-part Quality Gate and exportable as Markdown README.
             </p>
           </div>
           <a
@@ -183,8 +183,66 @@ export function ProgressLedgerView({ state, onOpenSettings }: ProgressLedgerView
         </div>
       </div>
 
-      {/* Module Table (Ordered 1..8) */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+      {/* Mobile Module Cards (< md) */}
+      <div className="md:hidden space-y-3">
+        {orderedModules.map((mod) => {
+          const lessons = getLessonsForModule(mod.id);
+          const done = lessons.filter((l) => state.completedLessonIds.includes(l.id)).length;
+          const modTasks = OPEN_ENDED_TASKS.filter((t) => t.moduleId === mod.id);
+          const modOeDone = modTasks.filter((t) =>
+            Boolean(state.openEndedSubmissions[t.id]?.submittedAt)
+          ).length;
+          const rec = state.quizResults[mod.quizId];
+          const allDone = done === lessons.length && Boolean(rec?.passed);
+
+          return (
+            <article
+              key={mod.id}
+              className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5 text-xs"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-semibold text-slate-900 leading-snug">
+                    Module {mod.order}: {mod.title}
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">{mod.subtitle}</p>
+                </div>
+                <a
+                  href={`#/module/${mod.id}`}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 shrink-0"
+                >
+                  <span>Open</span>
+                  <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                </a>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 tabular-nums text-[11px] text-slate-600">
+                <p>Lessons: {done} / {lessons.length}</p>
+                <p>Open-Ended: {modOeDone} / {modTasks.length}</p>
+                <p>Quiz Best: {rec ? `${rec.bestScorePercent}%` : '—'}</p>
+                <p
+                  className={`font-medium ${
+                    allDone
+                      ? 'text-emerald-700'
+                      : done > 0 || rec || modOeDone > 0
+                        ? 'text-blue-700'
+                        : 'text-slate-500'
+                  }`}
+                >
+                  {allDone
+                    ? 'Module Mastered'
+                    : done > 0 || rec || modOeDone > 0
+                      ? 'In Progress'
+                      : 'Not Started'}
+                </p>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      {/* Desktop Module Table (>= md, Ordered 1..8) */}
+      <div className="hidden md:block bg-white border border-slate-200 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">

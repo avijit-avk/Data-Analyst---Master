@@ -818,87 +818,168 @@ ${r.certificationsOrMentorship}
           </section>
 
           {state.jobApplications.length > 0 && (
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider">
-                    <tr>
-                      <th className="px-4 py-3 font-semibold">Company &amp; Role</th>
-                      <th className="px-4 py-3 font-semibold">Status</th>
-                      <th className="px-4 py-3 font-semibold">Applied / Follow-Up</th>
-                      <th className="px-4 py-3 font-semibold">Skills / Stage</th>
-                      <th className="px-4 py-3 font-semibold text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 tabular-nums">
-                    {state.jobApplications.map((app) => (
-                      <tr key={app.id} className="hover:bg-slate-50/70">
-                        <td className="px-4 py-3">
-                          <p className="font-semibold text-slate-900">{app.company}</p>
-                          <p className="text-slate-600">{app.role}</p>
-                        </td>
-                        <td className="px-4 py-3">
-                          <select
-                            value={app.status}
-                            aria-label={`Status for ${app.company}`}
-                            onChange={(e) =>
-                              onUpsertApplication({
-                                ...app,
-                                status: e.target.value as JobApplicationStatus,
-                              })
-                            }
-                            className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-800"
-                          >
-                            {STATUS_OPTIONS.map((st) => (
-                              <option key={st} value={st}>
-                                {st}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-4 py-3 text-slate-600">
-                          <p>Applied: {app.dateApplied || '—'}</p>
-                          <p>Follow-up: {app.followUpDate || '—'}</p>
-                        </td>
-                        <td className="px-4 py-3 text-slate-600 max-w-xs">
-                          <p className="truncate">{app.skillsEmphasized || '—'}</p>
-                          <p className="text-[11px] text-slate-500 truncate">
-                            {app.interviewStage || app.notes || ''}
-                          </p>
-                        </td>
-                        <td className="px-4 py-3 text-right whitespace-nowrap space-x-3">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingAppId(app.id);
-                              setAppCompany(app.company);
-                              setAppRole(app.role);
-                              setAppUrl(app.jobUrl);
-                              setAppDate(app.dateApplied);
-                              setAppStatus(app.status);
-                              setAppFollowUp(app.followUpDate);
-                              setAppSkills(app.skillsEmphasized);
-                              setAppStage(app.interviewStage);
-                              setAppNotes(app.notes);
-                            }}
-                            className="text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onDeleteApplication(app.id)}
-                            className="text-red-600 hover:text-red-700 font-medium cursor-pointer"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <>
+              {/* Mobile stacked cards (< md) */}
+              <div className="md:hidden space-y-3">
+                {state.jobApplications.map((app) => (
+                  <article
+                    key={app.id}
+                    className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 text-xs"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-900 break-words">{app.company}</p>
+                        <p className="text-slate-600 break-words">{app.role}</p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingAppId(app.id);
+                            setAppCompany(app.company);
+                            setAppRole(app.role);
+                            setAppUrl(app.jobUrl);
+                            setAppDate(app.dateApplied);
+                            setAppStatus(app.status);
+                            setAppFollowUp(app.followUpDate);
+                            setAppSkills(app.skillsEmphasized);
+                            setAppStage(app.interviewStage);
+                            setAppNotes(app.notes);
+                          }}
+                          className="text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDeleteApplication(app.id)}
+                          className="text-red-600 hover:text-red-700 font-medium cursor-pointer"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <select
+                        value={app.status}
+                        aria-label={`Mobile status for ${app.company}`}
+                        onChange={(e) =>
+                          onUpsertApplication({
+                            ...app,
+                            status: e.target.value as JobApplicationStatus,
+                          })
+                        }
+                        className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-800"
+                      >
+                        {STATUS_OPTIONS.map((st) => (
+                          <option key={st} value={st}>
+                            {st}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 tabular-nums">
+                      <p>Applied: {app.dateApplied || '—'}</p>
+                      <p>Follow-up: {app.followUpDate || '—'}</p>
+                    </div>
+
+                    {(app.skillsEmphasized || app.interviewStage || app.notes) && (
+                      <div className="text-[11px] text-slate-500 space-y-0.5 break-words">
+                        {app.skillsEmphasized && <p>Skills: {app.skillsEmphasized}</p>}
+                        {(app.interviewStage || app.notes) && (
+                          <p>{app.interviewStage || app.notes}</p>
+                        )}
+                      </div>
+                    )}
+                  </article>
+                ))}
               </div>
-            </div>
+
+              {/* Desktop table (>= md) */}
+              <div className="hidden md:block bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold">Company &amp; Role</th>
+                        <th className="px-4 py-3 font-semibold">Status</th>
+                        <th className="px-4 py-3 font-semibold">Applied / Follow-Up</th>
+                        <th className="px-4 py-3 font-semibold">Skills / Stage</th>
+                        <th className="px-4 py-3 font-semibold text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 tabular-nums">
+                      {state.jobApplications.map((app) => (
+                        <tr key={app.id} className="hover:bg-slate-50/70">
+                          <td className="px-4 py-3">
+                            <p className="font-semibold text-slate-900">{app.company}</p>
+                            <p className="text-slate-600">{app.role}</p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <select
+                              value={app.status}
+                              aria-label={`Status for ${app.company}`}
+                              onChange={(e) =>
+                                onUpsertApplication({
+                                  ...app,
+                                  status: e.target.value as JobApplicationStatus,
+                                })
+                              }
+                              className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-800"
+                            >
+                              {STATUS_OPTIONS.map((st) => (
+                                <option key={st} value={st}>
+                                  {st}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-4 py-3 text-slate-600">
+                            <p>Applied: {app.dateApplied || '—'}</p>
+                            <p>Follow-up: {app.followUpDate || '—'}</p>
+                          </td>
+                          <td className="px-4 py-3 text-slate-600 max-w-xs">
+                            <p className="truncate">{app.skillsEmphasized || '—'}</p>
+                            <p className="text-[11px] text-slate-500 truncate">
+                              {app.interviewStage || app.notes || ''}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3 text-right whitespace-nowrap space-x-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingAppId(app.id);
+                                setAppCompany(app.company);
+                                setAppRole(app.role);
+                                setAppUrl(app.jobUrl);
+                                setAppDate(app.dateApplied);
+                                setAppStatus(app.status);
+                                setAppFollowUp(app.followUpDate);
+                                setAppSkills(app.skillsEmphasized);
+                                setAppStage(app.interviewStage);
+                                setAppNotes(app.notes);
+                              }}
+                              className="text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onDeleteApplication(app.id)}
+                              className="text-red-600 hover:text-red-700 font-medium cursor-pointer"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}

@@ -22,6 +22,13 @@ export type PythonSimulationResponse =
   | PythonSimulationSuccess
   | PythonSimulationError;
 
+export const PYTHON_SIMULATOR_SCOPE = {
+  supported:
+    'pd.read_csv(), boolean masks, .str.lower/.strip(), .merge(), .groupby().agg(), .describe(), .value_counts(), np.mean/median/std/percentile, print()',
+  unsupported:
+    'custom def functions or classes, for/while loops, multi-line expression chaining, matplotlib/seaborn/scikit-learn, and external network or file I/O',
+};
+
 type SimFrame = {
   kind: 'dataframe';
   columns: string[];
@@ -439,11 +446,11 @@ function evalExpression(
     return performMerge(left, right, onKey, how);
   }
 
-  // df1.merge(df2, on='key', how='inner')
-  const dfMerge = expr.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\.merge\((.+)\)$/);
+  // Chained or single left.merge(right, on='key', how='inner')
+  const dfMerge = expr.match(/^(.+)\.merge\(([^()]*)\)$/);
   if (dfMerge) {
-    const left = env.get(dfMerge[1]);
-    if (!isFrame(left)) throw new Error(`"${dfMerge[1]}" is not a DataFrame.`);
+    const left = evalExpression(dfMerge[1], env, tableByName, tableByCsv);
+    if (!isFrame(left)) throw new Error(`Left side of .merge() is not a DataFrame.`);
     const args = splitTopLevelArgs(dfMerge[2]);
     const right = evalExpression(args[0], env, tableByName, tableByCsv);
     if (!isFrame(right)) throw new Error('Right argument to .merge() must be a DataFrame.');
@@ -822,11 +829,16 @@ function performMultiAgg(
     if (existing) existing.rows.push(r);
     else buckets.set(key, { keys: keyObj, rows: [r] });
   }
-  const metricCols = specs.map((s) => `${s.col}_${s.fn}`);
+  const colCounts = new Map<string, number>();
+  specs.forEach((s) => colCounts.set(s.col, (colCounts.get(s.col) ?? 0) + 1));
+  const outName = (s: { col: string; fn: string }) =>
+    (colCounts.get(s.col) ?? 0) > 1 ? `${s.col}_${s.fn}` : s.col;
+
+  const metricCols = specs.map(outName);
   const outRows: DatasetRow[] = Array.from(buckets.values()).map((b) => {
     const out: DatasetRow = { ...b.keys };
     specs.forEach((s) => {
-      out[`${s.col}_${s.fn}`] = computeAggVal(b.rows, s.col, s.fn, 2);
+      out[outName(s)] = computeAggVal(b.rows, s.col, s.fn, 2);
     });
     return out;
   });

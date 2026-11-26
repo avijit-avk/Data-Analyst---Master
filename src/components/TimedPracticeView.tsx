@@ -25,7 +25,11 @@ import {
   TimedDurationMinutes,
   TimedLanguage,
 } from '../types/academy';
-import { simulatePythonCode, PythonSimulationResponse } from '../utils/pythonSimulatorEngine';
+import {
+  PYTHON_SIMULATOR_SCOPE,
+  PythonSimulationResponse,
+  simulatePythonCode,
+} from '../utils/pythonSimulatorEngine';
 import { executeSqlQuery, SqlExecutionResponse } from '../utils/sqlSandboxEngine';
 
 interface TimedPracticeViewProps {
@@ -297,13 +301,16 @@ export function TimedPracticeView({
           </div>
 
           {language === 'python' && (
-            <p className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5">
-              <span className="font-semibold text-slate-900">Simulator Scope: </span>
-              Timed Python runs in the browser-local Constrained Python &amp; pandas Simulator
-              (supports <code className="font-mono">pd.read_csv</code>, <code className="font-mono">.merge</code>,{' '}
-              <code className="font-mono">.groupby().agg()</code>, boolean masks,{' '}
-              <code className="font-mono">.str</code> cleaning, <code className="font-mono">np.mean/median/percentile</code>).
-            </p>
+            <div className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 space-y-1">
+              <p>
+                <span className="font-semibold text-slate-900">Simulator Supported: </span>
+                {PYTHON_SIMULATOR_SCOPE.supported}.
+              </p>
+              <p>
+                <span className="font-semibold text-slate-900">Not Supported Here: </span>
+                {PYTHON_SIMULATOR_SCOPE.unsupported}.
+              </p>
+            </div>
           )}
         </section>
 
@@ -588,7 +595,7 @@ export function TimedPracticeView({
       {/* Main Split Workspace */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: Prompt, Constraints, Schema */}
-        <aside className="lg:col-span-5 space-y-4">
+        <aside className="lg:col-span-5 min-w-0 space-y-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
             <div className="space-y-1.5">
               <h2 className="font-display text-base font-semibold text-slate-900">
@@ -673,8 +680,8 @@ export function TimedPracticeView({
         </aside>
 
         {/* Right: Blank Editor + Live Output */}
-        <section className="lg:col-span-7 bg-white border border-slate-200 rounded-2xl overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+        <section className="lg:col-span-7 min-w-0 bg-white border border-slate-200 rounded-2xl overflow-hidden">
+          <div className="px-4 sm:px-5 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs font-semibold text-slate-700">
               {activeChallenge.language === 'sql'
                 ? 'Blank SQL Editor (Ctrl/Cmd + Enter to Run)'
@@ -700,6 +707,13 @@ export function TimedPracticeView({
               </button>
             </div>
           </div>
+
+          {activeChallenge.language === 'python' && (
+            <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 text-[11px] text-slate-600">
+              <span className="font-semibold text-slate-800">Not supported in browser simulator: </span>
+              {PYTHON_SIMULATOR_SCOPE.unsupported}.
+            </div>
+          )}
 
           <div className="p-4 bg-slate-950">
             <label htmlFor="timed-code-editor" className="sr-only">
@@ -780,28 +794,30 @@ export function TimedPracticeView({
                   </pre>
                 )}
                 {pyResult.resultTable && pyResult.resultTable.rows.length > 0 && (
-                  <table className="w-full text-left border-collapse text-xs border border-slate-200 rounded-lg overflow-hidden">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                      <tr>
-                        {pyResult.resultTable.columns.map((c) => (
-                          <th key={c} className="px-3 py-2 font-mono font-semibold text-slate-700">
-                            {c}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 tabular-nums">
-                      {pyResult.resultTable.rows.slice(0, 20).map((r, i) => (
-                        <tr key={i}>
-                          {pyResult.resultTable!.columns.map((c) => (
-                            <td key={c} className="px-3 py-2 text-slate-700 whitespace-nowrap">
-                              {r[c] === null ? 'NULL' : String(r[c])}
-                            </td>
+                  <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead className="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                          {pyResult.resultTable.columns.map((c) => (
+                            <th key={c} className="px-3 py-2 font-mono font-semibold text-slate-700">
+                              {c}
+                            </th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 tabular-nums">
+                        {pyResult.resultTable.rows.slice(0, 20).map((r, i) => (
+                          <tr key={i}>
+                            {pyResult.resultTable!.columns.map((c) => (
+                              <td key={c} className="px-3 py-2 text-slate-700 whitespace-nowrap">
+                                {r[c] === null ? 'NULL' : String(r[c])}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             )}

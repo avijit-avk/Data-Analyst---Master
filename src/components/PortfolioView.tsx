@@ -74,9 +74,10 @@ export function PortfolioView({
       createdAt: now,
       updatedAt: now,
       ...tpl.defaults,
+      learnerVerifiedOriginalWork: false,
       rubricSelfReview: { ...DEFAULT_PORTFOLIO_RUBRIC },
+      readmeDraft: '',
     };
-    created.readmeDraft = generatePortfolioReadmeMarkdown(created);
     onUpsertProject(created);
     setSelectedId(created.id);
     setActiveStep('framing');
@@ -202,8 +203,8 @@ export function PortfolioView({
         </section>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Project Switcher + Completion Checklist */}
-          <aside className="lg:col-span-4 space-y-4">
+          {/* Project Switcher + Final Quality Gate + Structure Checklist */}
+          <aside className="lg:col-span-4 min-w-0 space-y-4">
             <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 px-1">
                 Your Saved Projects ({state.portfolioProjects.length})
@@ -212,6 +213,18 @@ export function PortfolioView({
                 {state.portfolioProjects.map((proj) => {
                   const q = evaluatePortfolioProjectQuality(proj);
                   const isCurr = proj.id === activeProject?.id;
+                  const statusColor = q.isPortfolioComplete
+                    ? isCurr
+                      ? 'bg-emerald-500/20 text-emerald-200 border-emerald-400/40'
+                      : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : q.isTemplateBaseline
+                      ? isCurr
+                        ? 'bg-amber-500/20 text-amber-200 border-amber-400/40'
+                        : 'bg-amber-50 text-amber-800 border-amber-200'
+                      : isCurr
+                        ? 'bg-blue-500/20 text-blue-200 border-blue-400/40'
+                        : 'bg-blue-50 text-blue-800 border-blue-200';
+
                   return (
                     <div
                       key={proj.id}
@@ -224,18 +237,25 @@ export function PortfolioView({
                       <button
                         type="button"
                         onClick={() => setSelectedId(proj.id)}
-                        className="text-left flex-1 cursor-pointer"
+                        className="text-left flex-1 min-w-0 cursor-pointer"
                       >
-                        <p className="text-xs font-semibold leading-snug">
+                        <p className="text-xs font-semibold leading-snug break-words">
                           {proj.title.trim() || 'Untitled Project'}
                         </p>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                          <span
+                            className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded border ${statusColor}`}
+                          >
+                            {q.statusLabel}
+                          </span>
+                        </div>
                         <p
                           className={`text-[11px] mt-1 tabular-nums ${
                             isCurr ? 'text-slate-300' : 'text-slate-500'
                           }`}
                         >
-                          {q.completedCount}/{q.totalChecklist} checks · Rubric {q.rubricCheckedCount}/
-                          {q.totalRubric}
+                          Structure {q.completedCount}/{q.totalChecklist} · Gate{' '}
+                          {q.qualityGatePassedCount}/{q.qualityGateTotal}
                         </p>
                       </button>
                       <button
@@ -245,7 +265,7 @@ export function PortfolioView({
                           if (isCurr) setSelectedId(null);
                         }}
                         aria-label={`Delete ${proj.title || 'project'}`}
-                        className={`p-1 rounded hover:bg-red-600/20 cursor-pointer ${
+                        className={`p-1 rounded hover:bg-red-600/20 shrink-0 cursor-pointer ${
                           isCurr ? 'text-slate-300 hover:text-white' : 'text-slate-400 hover:text-red-700'
                         }`}
                       >
@@ -260,58 +280,146 @@ export function PortfolioView({
             {activeProject && (() => {
               const evalQuality = evaluatePortfolioProjectQuality(activeProject);
               return (
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-display text-sm font-semibold text-slate-900">
-                      10-Point Readiness Checks
-                    </h3>
-                    <span
-                      className={`text-xs font-semibold tabular-nums ${
-                        evalQuality.isPortfolioComplete ? 'text-emerald-700' : 'text-blue-600'
-                      }`}
-                    >
-                      {evalQuality.completedCount} / {evalQuality.totalChecklist}
-                    </span>
+                <>
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="font-display text-sm font-semibold text-slate-900">
+                          Final Portfolio Quality Gate
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Required to graduate from draft to Job-Ready Artifact
+                        </p>
+                      </div>
+                      <span
+                        className={`text-xs font-semibold tabular-nums shrink-0 ${
+                          evalQuality.qualityGatePassedCount === evalQuality.qualityGateTotal
+                            ? 'text-emerald-700'
+                            : 'text-amber-700'
+                        }`}
+                      >
+                        {evalQuality.qualityGatePassedCount} / {evalQuality.qualityGateTotal}
+                      </span>
+                    </div>
+
+                    {evalQuality.isTemplateBaseline && (
+                      <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900 leading-relaxed">
+                        Template Starter Draft detected: structure fields are pre-filled as a scaffold only. Customize your work notes and findings, complete 6+ rubric checks, and sign the Step 4 attestation.
+                      </div>
+                    )}
+
+                    <ul className="space-y-2.5">
+                      {evalQuality.qualityGateResults.map((gate) => (
+                        <li key={gate.id} className="flex items-start gap-2 text-xs">
+                          {gate.passed ? (
+                            <CheckCircle2
+                              className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <Circle
+                              className="w-4 h-4 text-amber-400 shrink-0 mt-0.5"
+                              aria-hidden="true"
+                            />
+                          )}
+                          <div className="min-w-0">
+                            <p
+                              className={`font-medium ${
+                                gate.passed ? 'text-slate-800' : 'text-slate-700'
+                              }`}
+                            >
+                              {gate.label}
+                            </p>
+                            {!gate.passed && (
+                              <p className="text-[11px] text-amber-700 mt-0.5">{gate.reason}</p>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
 
-                  <ul className="space-y-2.5">
-                    {evalQuality.checklistResults.map((item) => (
-                      <li key={item.id} className="flex items-start gap-2 text-xs">
-                        {item.passed ? (
-                          <CheckCircle2
-                            className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"
-                            aria-hidden="true"
-                          />
-                        ) : (
-                          <Circle
-                            className="w-4 h-4 text-slate-300 shrink-0 mt-0.5"
-                            aria-hidden="true"
-                          />
-                        )}
-                        <div>
-                          <p
-                            className={`font-medium ${
-                              item.passed ? 'text-slate-800' : 'text-slate-600'
-                            }`}
-                          >
-                            {item.label}
-                          </p>
-                          {!item.passed && (
-                            <p className="text-[11px] text-amber-700 mt-0.5">{item.reason}</p>
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-display text-sm font-semibold text-slate-900">
+                        10-Point Structure Checks
+                      </h3>
+                      <span
+                        className={`text-xs font-semibold tabular-nums ${
+                          evalQuality.completedCount === evalQuality.totalChecklist
+                            ? 'text-emerald-700'
+                            : 'text-blue-600'
+                        }`}
+                      >
+                        {evalQuality.completedCount} / {evalQuality.totalChecklist}
+                      </span>
+                    </div>
+
+                    <ul className="space-y-2.5">
+                      {evalQuality.checklistResults.map((item) => (
+                        <li key={item.id} className="flex items-start gap-2 text-xs">
+                          {item.passed ? (
+                            <CheckCircle2
+                              className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <Circle
+                              className="w-4 h-4 text-slate-300 shrink-0 mt-0.5"
+                              aria-hidden="true"
+                            />
                           )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                          <div className="min-w-0">
+                            <p
+                              className={`font-medium ${
+                                item.passed ? 'text-slate-800' : 'text-slate-600'
+                              }`}
+                            >
+                              {item.label}
+                            </p>
+                            {!item.passed && (
+                              <p className="text-[11px] text-amber-700 mt-0.5">{item.reason}</p>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
               );
             })()}
           </aside>
 
           {/* Main Project Editor */}
-          {activeProject && (
-            <section className="lg:col-span-8 bg-white border border-slate-200 rounded-2xl overflow-hidden">
-              <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center gap-1.5">
+          {activeProject && (() => {
+            const evalQuality = evaluatePortfolioProjectQuality(activeProject);
+            return (
+            <section className="lg:col-span-8 min-w-0 bg-white border border-slate-200 rounded-2xl overflow-hidden">
+              <div className="px-4 sm:px-5 py-3 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-slate-900 truncate">
+                    {activeProject.title.trim() || 'Untitled Project'}
+                  </p>
+                  <p className="text-[11px] text-slate-500 tabular-nums">
+                    Structure {evalQuality.completedCount}/{evalQuality.totalChecklist} · Quality Gate{' '}
+                    {evalQuality.qualityGatePassedCount}/{evalQuality.qualityGateTotal} · Rubric{' '}
+                    {evalQuality.rubricCheckedCount}/{evalQuality.totalRubric}
+                  </p>
+                </div>
+                <span
+                  className={`inline-block text-[11px] font-semibold px-2.5 py-1 rounded border shrink-0 ${
+                    evalQuality.isPortfolioComplete
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                      : evalQuality.isTemplateBaseline
+                        ? 'bg-amber-50 text-amber-800 border-amber-200'
+                        : 'bg-blue-50 text-blue-800 border-blue-200'
+                  }`}
+                >
+                  {evalQuality.statusLabel}
+                </span>
+              </div>
+
+              <div className="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center gap-1.5">
                 {(
                   [
                     ['framing', '1. Framing & Grain'],
@@ -336,7 +444,7 @@ export function PortfolioView({
                 ))}
               </div>
 
-              <div className="p-6 space-y-5">
+              <div className="p-4 sm:p-6 space-y-5">
                 {activeStep === 'framing' && (
                   <>
                     <FieldInput
@@ -496,7 +604,7 @@ export function PortfolioView({
                               type="checkbox"
                               checked={Boolean(activeProject.rubricSelfReview[dim.key])}
                               onChange={() => toggleRubric(dim.key)}
-                              className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
+                              className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-600 shrink-0"
                             />
                             <div>
                               <span className="font-semibold text-slate-900">{dim.label}</span>
@@ -505,6 +613,41 @@ export function PortfolioView({
                           </label>
                         ))}
                       </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-200 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="font-display text-sm font-semibold text-slate-900">
+                          Final Quality Gate: Original Work Attestation
+                        </h3>
+                        <span className="text-xs font-semibold tabular-nums text-slate-600">
+                          Gate {evalQuality.qualityGatePassedCount} / {evalQuality.qualityGateTotal}
+                        </span>
+                      </div>
+                      <label
+                        htmlFor="pf-attestation"
+                        className={`p-3.5 rounded-xl border flex items-start gap-3 text-xs cursor-pointer ${
+                          activeProject.learnerVerifiedOriginalWork
+                            ? 'border-emerald-200 bg-emerald-50/70 text-emerald-950'
+                            : 'border-amber-200 bg-amber-50/60 text-slate-800'
+                        }`}
+                      >
+                        <input
+                          id="pf-attestation"
+                          type="checkbox"
+                          checked={Boolean(activeProject.learnerVerifiedOriginalWork)}
+                          onChange={() =>
+                            updateField(
+                              'learnerVerifiedOriginalWork',
+                              !activeProject.learnerVerifiedOriginalWork
+                            )
+                          }
+                          className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-600 shrink-0"
+                        />
+                        <span className="leading-relaxed">
+                          I ran these SQL, Python, or Excel analyses on the dataset myself, verified every figure reported in Findings, and tailored the executive summary and recommendations in my own words.
+                        </span>
+                      </label>
                     </div>
                   </>
                 )}
@@ -515,16 +658,32 @@ export function PortfolioView({
                     ? activeProject.readmeDraft
                     : generatedMd;
                   const plainTextStudy = generatePortfolioPlainTextCaseStudy(activeProject);
+                  const unmetGates = evalQuality.qualityGateResults.filter((g) => !g.passed);
 
                   return (
                     <div className="space-y-5">
+                      {!evalQuality.isPortfolioComplete && (
+                        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900 space-y-1.5">
+                          <p className="font-semibold">
+                            Status: {evalQuality.statusLabel} — Complete the Final Quality Gate before publishing to GitHub
+                          </p>
+                          {unmetGates.length > 0 && (
+                            <ul className="list-disc pl-4 space-y-0.5 text-[11px]">
+                              {unmetGates.map((g) => (
+                                <li key={g.id}>{g.reason}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
                           <h3 className="font-display text-sm font-semibold text-slate-900">
                             Editable GitHub README.md Draft
                           </h3>
                           <p className="text-xs text-slate-500">
-                            Auto-built from your 19 structured project fields—customize or regenerate anytime.
+                            Auto-built from your structured project fields—customize or regenerate anytime.
                           </p>
                         </div>
                         <button
@@ -609,7 +768,8 @@ export function PortfolioView({
                 })()}
               </div>
             </section>
-          )}
+            );
+          })()}
         </div>
       )}
     </div>

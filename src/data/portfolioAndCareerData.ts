@@ -381,13 +381,86 @@ export function evaluatePortfolioProjectQuality(project: PortfolioProject) {
   }));
   const completedCount = results.filter((r) => r.passed).length;
   const rubricCheckedCount = Object.values(project.rubricSelfReview).filter(Boolean).length;
+
+  const tpl =
+    project.templateId !== 'custom'
+      ? PORTFOLIO_TEMPLATES.find((t) => t.id === project.templateId)
+      : undefined;
+
+  const workNotesCustomized = tpl
+    ? project.workNotes.trim() !== tpl.defaults.workNotes.trim() &&
+      hasMeaningfulText(project.workNotes, 25, 5)
+    : hasMeaningfulText(project.workNotes, 25, 5);
+
+  const findingsOrRecsCustomized = tpl
+    ? (project.findings.trim() !== tpl.defaults.findings.trim() &&
+        hasMeaningfulText(project.findings, 30, 6)) ||
+      (project.quantifiedRecommendations.trim() !== tpl.defaults.quantifiedRecommendations.trim() &&
+        hasMeaningfulText(project.quantifiedRecommendations, 30, 6)) ||
+      (project.shortSummary.trim() !== tpl.defaults.shortSummary.trim() &&
+        hasMeaningfulText(project.shortSummary, 25, 5))
+    : hasMeaningfulText(project.findings, 30, 6) &&
+      hasMeaningfulText(project.quantifiedRecommendations, 30, 6);
+
+  const rubricThresholdMet = rubricCheckedCount >= 6;
+  const learnerAttested = Boolean(project.learnerVerifiedOriginalWork);
+
+  const qualityGateResults = [
+    {
+      id: 'gate-work-notes',
+      label: 'Own SQL / Python / Excel work notes added',
+      passed: workNotesCustomized,
+      reason: tpl
+        ? 'Replace the starter workNotes with your own executed queries, calculations, and verification checks.'
+        : 'Document your executed SQL/Python/Excel queries and output checks (25+ chars).',
+    },
+    {
+      id: 'gate-findings-customized',
+      label: 'Findings, recommendations, or summary tailored in own words',
+      passed: findingsOrRecsCustomized,
+      reason: tpl
+        ? 'Edit the pre-populated findings, recommendations, or short summary so they reflect your own verified analysis.'
+        : 'Customize quantified findings and business recommendations in your own words.',
+    },
+    {
+      id: 'gate-rubric',
+      label: 'Rubric self-review completed (6+ of 8 dimensions)',
+      passed: rubricThresholdMet,
+      reason: `Check at least 6 of 8 self-review dimensions in Step 4 (${rubricCheckedCount}/8 checked).`,
+    },
+    {
+      id: 'gate-attestation',
+      label: 'Original work attestation signed',
+      passed: learnerAttested,
+      reason: 'Confirm in Step 4 that you ran these analyses yourself and verified the figures.',
+    },
+  ];
+
+  const qualityGatePassedCount = qualityGateResults.filter((g) => g.passed).length;
+  const isTemplateBaseline = Boolean(tpl && !workNotesCustomized && !findingsOrRecsCustomized);
+  const isPortfolioComplete =
+    completedCount === PORTFOLIO_COMPLETION_CHECKLIST.length &&
+    qualityGatePassedCount === qualityGateResults.length;
+
+  const statusLabel: 'Template Starter Draft' | 'In Review (Needs Verification)' | 'Job-Ready Artifact' =
+    isPortfolioComplete
+      ? 'Job-Ready Artifact'
+      : isTemplateBaseline
+        ? 'Template Starter Draft'
+        : 'In Review (Needs Verification)';
+
   return {
     checklistResults: results,
     completedCount,
     totalChecklist: PORTFOLIO_COMPLETION_CHECKLIST.length,
     rubricCheckedCount,
     totalRubric: PORTFOLIO_RUBRIC_DIMENSIONS.length,
-    isPortfolioComplete: completedCount === PORTFOLIO_COMPLETION_CHECKLIST.length,
+    qualityGateResults,
+    qualityGatePassedCount,
+    qualityGateTotal: qualityGateResults.length,
+    isTemplateBaseline,
+    statusLabel,
+    isPortfolioComplete,
   };
 }
 

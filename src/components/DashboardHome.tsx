@@ -68,11 +68,30 @@ export function DashboardHome({ state }: DashboardHomeProps) {
     ? `Welcome back, ${state.settings.learnerName.trim()}`
     : 'Data Analytics Learning Workspace';
 
+  const nextModule =
+    orderedModules.find((m) => m.id === nextLesson?.moduleId) ?? orderedModules[0];
+  const primaryPathHref =
+    completedLessonsCount < totalLessons
+      ? `#/lesson/${nextLesson.id}`
+      : !capstoneResult?.passed
+        ? '#/quiz/quiz-capstone'
+        : completedPortfolios === 0
+          ? '#/portfolio'
+          : '#/career-readiness';
+  const primaryPathStep =
+    completedLessonsCount < totalLessons
+      ? `Next: Module ${nextModule.order} · ${nextLesson.title}`
+      : !capstoneResult?.passed
+        ? 'Next: Cumulative Capstone Assessment'
+        : completedPortfolios === 0
+          ? 'Next: Verify Your First Portfolio Artifact'
+          : 'Next: Career & Application Readiness';
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-10">
-      {/* Hero + Primary CTA */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
+      {/* Hero + Single Dominant Path CTA */}
       <section className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="space-y-3 max-w-2xl">
+        <div className="space-y-2.5 max-w-2xl">
           <p className="text-xs font-medium uppercase tracking-wider text-blue-600">
             Self-Contained Job-Readiness LMS
             {state.settings.targetRole ? ` · Target: ${state.settings.targetRole}` : ''}
@@ -85,70 +104,26 @@ export function DashboardHome({ state }: DashboardHomeProps) {
           </h1>
           <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
             Work sequentially across 8 analytical modules (Foundations, Excel, SQL, Python,
-            Statistics, BI/DAX, Business Cases, Interview Prep), practice in live SQL &amp;
-            constrained Python sandboxes, complete timed drills, and build real portfolio case studies.
+            Statistics, BI/DAX, Case Studies, Interviews), verify queries in browser-local
+            sandboxes, and pass the Portfolio Quality Gate.
           </p>
-
-          <div className="pt-1 flex flex-wrap items-center gap-3 text-xs font-medium">
-            <a
-              href="#/timed-practice"
-              className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700"
-            >
-              <Clock className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Timed Practice</span>
-            </a>
-            <span className="text-slate-300">·</span>
-            <a
-              href="#/portfolio"
-              className="inline-flex items-center gap-1.5 text-slate-700 hover:text-blue-600"
-            >
-              <FolderKanban className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Portfolio Builder</span>
-            </a>
-            <span className="text-slate-300">·</span>
-            <a
-              href="#/career-readiness"
-              className="inline-flex items-center gap-1.5 text-slate-700 hover:text-blue-600"
-            >
-              <Briefcase className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Career &amp; Resume Prep</span>
-            </a>
-            <span className="text-slate-300">·</span>
-            <a
-              href="#/progress"
-              className="inline-flex items-center gap-1.5 text-slate-700 hover:text-blue-600"
-            >
-              <span>Progress Ledger</span>
-            </a>
-          </div>
+          <p className="text-xs font-medium text-slate-500 pt-0.5">{primaryPathStep}</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end gap-3 shrink-0">
-          {completedLessonsCount < totalLessons ? (
-            <a
-              href={`#/lesson/${nextLesson.id}`}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors"
-            >
-              <span>
-                {completedLessonsCount === 0 ? 'Start Module 1' : 'Continue Next Lesson'}
-              </span>
-              <ArrowRight className="w-4 h-4" aria-hidden="true" />
-            </a>
-          ) : (
-            <a
-              href="#/quiz/quiz-capstone"
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl transition-colors"
-            >
-              <span>Take Capstone Assessment</span>
-              <ArrowRight className="w-4 h-4" aria-hidden="true" />
-            </a>
-          )}
+        <div className="flex flex-col items-stretch lg:items-end gap-2.5 shrink-0">
           <a
-            href="#/lab/lab-retail"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors"
+            href={primaryPathHref}
+            className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition-colors"
           >
-            <Database className="w-4 h-4 text-slate-500" aria-hidden="true" />
-            <span>Open SQL &amp; Python Labs</span>
+            <span>Continue Job-Readiness Path</span>
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </a>
+          <a
+            href="#/lab"
+            className="inline-flex items-center justify-center gap-1.5 text-xs font-medium text-slate-600 hover:text-blue-600 py-1"
+          >
+            <Database className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>Open Practice Labs &amp; Timed Drills</span>
           </a>
         </div>
       </section>
@@ -174,7 +149,7 @@ export function DashboardHome({ state }: DashboardHomeProps) {
 
         <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-2">
           <div className="flex items-center justify-between text-xs font-medium text-slate-500">
-            <span>Guided Lab &amp; Open-Ended</span>
+            <span>Labs, Open-Ended &amp; Timed</span>
             <FlaskConical className="w-4 h-4 text-slate-400" aria-hidden="true" />
           </div>
           <p className="font-display text-2xl font-bold text-slate-900 tabular-nums">
@@ -187,7 +162,7 @@ export function DashboardHome({ state }: DashboardHomeProps) {
             />
           </div>
           <p className="text-xs text-slate-500 tabular-nums">
-            {openEndedDone}/{OPEN_ENDED_TASKS.length} open-ended · {timedCount} timed drills
+            {openEndedDone}/{OPEN_ENDED_TASKS.length} open-ended · {timedCount} timed
           </p>
         </div>
 
@@ -224,54 +199,47 @@ export function DashboardHome({ state }: DashboardHomeProps) {
 
         <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-2">
           <div className="flex items-center justify-between text-xs font-medium text-slate-500">
-            <span>Portfolio &amp; Career Prep</span>
+            <span>Portfolio &amp; Career Gate</span>
             <CheckCircle2 className="w-4 h-4 text-slate-400" aria-hidden="true" />
           </div>
           <p className="font-display text-2xl font-bold text-slate-900 tabular-nums">
-            {state.portfolioProjects.length} Projects
+            {completedPortfolios} Job-Ready
           </p>
           <p className="text-xs text-slate-500 tabular-nums">
-            {completedPortfolios} complete · {checklistDone}/15 career checks ·{' '}
-            {state.jobApplications.length} apps
+            {state.portfolioProjects.length} total drafts · {checklistDone}/15 career checks
           </p>
           <a
-            href="#/career-readiness"
+            href="#/portfolio"
             className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
           >
-            <span>Career &amp; Resume Hub</span>
+            <span>Portfolio Builder</span>
             <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
           </a>
         </div>
       </section>
 
-      {/* Recommended 9-Step Sequence Strip */}
-      <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <h2 className="font-display text-base font-semibold text-slate-900">
-            Recommended Job-Readiness Sequence
-          </h2>
-          <span className="text-xs text-slate-500">
-            Follow step-by-step for cumulative skill reinforcement
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          {orderedModules.map((m) => (
-            <a
-              key={m.id}
-              href={`#/module/${m.id}`}
-              className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-medium tabular-nums"
-            >
-              {m.order}. {m.title.split('&')[0].replace('Data Analytics ', '').replace('Microsoft ', '').trim()}
-            </a>
-          ))}
+      {/* Compact 9-Step Sequence Bar */}
+      <nav
+        aria-label="Job-readiness sequence"
+        className="flex flex-wrap items-center gap-1.5 text-xs"
+      >
+        <span className="font-semibold text-slate-500 mr-1">Sequence:</span>
+        {orderedModules.map((m) => (
           <a
-            href="#/portfolio"
-            className="px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 font-medium"
+            key={m.id}
+            href={`#/module/${m.id}`}
+            className="px-2.5 py-1 rounded-md bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-medium tabular-nums"
           >
-            9. Portfolio &amp; Career Readiness
+            {m.order}. {m.title.split('&')[0].replace('Data Analytics ', '').replace('Microsoft ', '').trim()}
           </a>
-        </div>
-      </section>
+        ))}
+        <a
+          href="#/portfolio"
+          className="px-2.5 py-1 rounded-md bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 font-medium"
+        >
+          9. Portfolio &amp; Career
+        </a>
+      </nav>
 
       {/* Sequential 8-Module Curriculum */}
       <section className="space-y-4">

@@ -21,7 +21,11 @@ import {
   LMS_LESSONS,
 } from '../data/lmsCurriculum';
 import { LmsLocalState } from '../types/academy';
-import { PythonSimulationResponse, simulatePythonCode } from '../utils/pythonSimulatorEngine';
+import {
+  PYTHON_SIMULATOR_SCOPE,
+  PythonSimulationResponse,
+  simulatePythonCode,
+} from '../utils/pythonSimulatorEngine';
 
 interface LessonViewProps {
   lessonId: string;
@@ -308,7 +312,7 @@ export function LessonView({
 
               {lesson.guidedExercise.starterCode && (
                 <div className="border border-slate-200 rounded-xl overflow-hidden">
-                  <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2">
+                  <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-semibold text-slate-700">
                       Try in Constrained Python &amp; pandas Simulator
                     </span>
@@ -320,6 +324,16 @@ export function LessonView({
                       <Play className="w-3.5 h-3.5" aria-hidden="true" />
                       <span>Run Simulator</span>
                     </button>
+                  </div>
+                  <div className="px-4 py-2 bg-slate-50/70 border-b border-slate-200 text-[11px] text-slate-600 space-y-0.5">
+                    <p>
+                      <span className="font-semibold text-slate-800">Supported:</span>{' '}
+                      {PYTHON_SIMULATOR_SCOPE.supported}
+                    </p>
+                    <p>
+                      <span className="font-semibold text-slate-800">Not supported here:</span>{' '}
+                      {PYTHON_SIMULATOR_SCOPE.unsupported}
+                    </p>
                   </div>
                   <div className="p-3.5 bg-slate-950">
                     <textarea

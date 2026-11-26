@@ -19,7 +19,11 @@ import { EMBEDDED_DATASETS, getDatasetById, triggerCsvDownload } from '../data/e
 import { getLabById, LMS_LABS } from '../data/lmsLabs';
 import { getOpenEndedTasksForLab } from '../data/openEndedTasks';
 import { LmsLocalState } from '../types/academy';
-import { PythonSimulationResponse, simulatePythonCode } from '../utils/pythonSimulatorEngine';
+import {
+  PYTHON_SIMULATOR_SCOPE,
+  PythonSimulationResponse,
+  simulatePythonCode,
+} from '../utils/pythonSimulatorEngine';
 import { executeSqlQuery, SqlExecutionResponse } from '../utils/sqlSandboxEngine';
 import { OpenEndedEvaluator } from './OpenEndedEvaluator';
 
@@ -541,14 +545,12 @@ export function LabView({
                     Constrained Python &amp; pandas Simulator
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Browser-local analytical Python subset supporting{' '}
-                    <code className="font-mono">pd.read_csv</code>, boolean masks,{' '}
-                    <code className="font-mono">.str.lower/.strip</code>,{' '}
-                    <code className="font-mono">.merge()</code>,{' '}
-                    <code className="font-mono">.groupby().agg()</code>,{' '}
-                    <code className="font-mono">.describe()</code>,{' '}
-                    <code className="font-mono">np.mean/median/std/percentile</code>, and{' '}
-                    <code className="font-mono">print()</code>. Not a full CPython runtime.
+                    <span className="font-semibold text-slate-700">Supported:</span>{' '}
+                    {PYTHON_SIMULATOR_SCOPE.supported}.
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    <span className="font-semibold text-slate-700">Not supported here:</span>{' '}
+                    {PYTHON_SIMULATOR_SCOPE.unsupported}.
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
